@@ -1,0 +1,130 @@
+<!DOCTYPE html>
+<html><head>
+    {% block head %}
+
+    <!-- Standard Meta -->
+    {% block meta %}
+    <meta charset="utf-8">
+    <meta http-equiv="X-UA-Compatible" content="IE=edge,chrome=1">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0">
+    {% endblock %}
+
+    <!-- Site Properties -->
+    <title>{% block title %}{% endblock %}</title>
+
+    {% block style %}
+    <link rel="stylesheet" href="{{url_for('static', filename='semantic.min.css')}}">
+    <link rel="stylesheet" href="{{url_for('static', filename='main.css')}}">
+    {% endblock %}
+
+    {% endblock %}
+  </head>
+  <body class="pushable">
+
+    {% block followbar %}
+    <div class="ui large top fixed menu transition hidden">
+        <div class="ui container">
+            <a class="active item" href="{{url_for('main.index')}}">Home</a>
+            <a class="item">Work</a>
+            <a class="item">Company</a>
+            <a class="item">Careers</a>
+            <div class="right menu">
+            <div class="item">
+                <a class="ui button" href="{{url_for('auth.login')}}">Log in</a>
+            </div>
+            <div class="item">
+                <a class="ui primary button" href="{{url_for('auth.register')}}">Sign Up</a>
+            </div>
+            </div>
+        </div>
+    </div>
+    {% endblock %}
+
+    {% block sidebar %}
+    <div class="ui vertical inverted sidebar menu left">
+        <a class="active item" href="{{url_for('main.index')}}">Home</a>
+        <a class="item">Work</a>
+        <a class="item">Company</a>
+        <a class="item">Careers</a>
+        <a class="item" href="{{url_for('auth.login')}}">Login</a>
+        <a class="item" href="{{url_for('auth.register')}}">Signup</a>
+    </div>
+    {% endblock %}
+
+    {% block pusher %}
+    <div class="pusher">
+
+    {% block navbar %}
+    <div class="ui inverted vertical segment">
+        <div class="ui container">
+            <div class="ui large secondary inverted pointing menu">
+            <a class="toc item"><i class="sidebar icon"></i></a>
+            <a class="active item" href="{{url_for('main.index')}}">Home</a>
+            <a class="item">Work</a>
+            <a class="item">Company</a>
+            <a class="item">Careers</a>
+            <div class="right item">
+            {% if current_user.is_authenticated %}
+            <div class="ui inline pointing dropdown">
+                <img class="ui avatar image" src="{{current_user.gravatar(size=18)}}">
+                <span>{{current_user.username}}</span>
+                <div class="menu">
+                    <a class="item" href="{{url_for('auth.user', username=current_user.username)}}"><i class="user icon"></i>Profile</a>
+                    <div class="item">aaa</div>
+                    <div class="item">aaa</div>
+                    <div class="item">aaa</div>
+                    <a class="item" href="{{url_for('auth.logout')}}"><i class="power off icon"></i>Log Out</a>
+                </div>
+            </div>
+            {% else %}
+            <a class="ui inverted button" href="{{url_for('auth.login')}}">
+                Log In
+            </a>
+            <a class="ui inverted button" href="{{url_for('auth.register')}}">
+                Sign Up
+            </a>
+            {% endif %}
+            </div>
+            </div>
+        </div>
+    </div>
+    {% endblock %}
+
+    <!-- Flash Messages -->
+    {% for category, message in get_flashed_messages(with_categories=True) %}
+    <div class="ui {{category}} message">
+        <i class="close icon"></i>
+        <p>{{message}}</p>
+    </div>
+    {% endfor %}
+
+    {% block pusher_content %}
+    {% endblock %}
+
+    </div>
+    {% endblock %}
+
+    {% block nopusher %}
+    <!-- Flash Messages -->
+    {% for category, message in get_flashed_messages(with_categories=True) %}
+    <div class="ui {{category}} message">
+        <i class="close icon"></i>
+        <p>{{message}}</p>
+    </div>
+    {% endfor %}
+
+    {% block nopusher_content %}
+    {% endblock %}
+
+    {% endblock %}
+
+    {% block script %}
+    <script
+    src="https://code.jquery.com/jquery-3.1.1.min.js"
+    integrity="sha256-hVVnYaiADRTO2PzUGmuLJr8BLUSjGIZsDYGmIJLv2b8="
+    crossorigin="anonymous"></script>
+    <script src="{{url_for('static', filename='semantic.min.js')}}"></script>
+    <script src="{{url_for('static', filename='main.js')}}"></script>
+    {% endblock %}
+
+</body></html>

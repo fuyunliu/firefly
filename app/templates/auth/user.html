@@ -1,0 +1,39 @@
+{% extends "base.html" %}
+{% block title %}Firefly - Change Email{% endblock %}
+{% block nopusher %}{% endblock %}
+
+{% block pusher_content %}
+<div class="ui container segment">
+<div class="ui special card">
+    <div class="blurring dimmable image">
+    <div class="ui dimmer">
+        <div class="content">
+        <div class="center">
+            <div class="ui inverted button">Edit Profile</div>
+        </div>
+        </div>
+    </div>
+    <img src="{{user.gravatar()}}">
+    </div>
+    <div class="content">
+    <a class="header">{{user.username|title}}</a>
+    <div class="meta">
+        <span class="date">Joined in {{user.member_since.year}}</span>
+        <br>
+        <span class="date">Last seen {{user.last_seen|timesince}}</span>
+    </div>
+    <div class="description">
+        {{user.about_me|d('about me', true)}}
+    </div>
+    </div>
+    <div class="extra content">
+        <span class="right floated">
+        {{user.followed.count() - 1}} Following
+        </span>
+        <span>
+        {{user.followers.count() - 1}} Followers
+        </span>
+    </div>
+</div>
+</div>
+{% endblock %}

@@ -1,0 +1,9 @@
+<div class="ui error message {% if form.errors %}visible{% endif %}">
+    <ul class="list">
+        {% for field, errors in form.errors.items() %}
+        <li>
+            {{ form[field].label }}: {{ ', '.join(errors) }}
+        </li>
+        {% endfor %}
+    </ul>
+</div>

@@ -1,0 +1,44 @@
+{% extends "base.html" %}
+{% block title %}Firefly - Login{% endblock %}
+{% block followbar %}{% endblock %}
+{% block sidebar %}{% endblock %}
+{% block pusher %}{% endblock %}
+
+{% block nopusher_content %}
+<div class="ui middle aligned center aligned grid SignForm">
+<div class="column">
+<h2 class="ui teal image header">
+    <div class="content">Login to your account</div>
+</h2>
+<form class="ui large form" action="{{url_for('auth.login')}}" method="POST">
+    <div class="ui segment">
+    {{form.csrf_token}}
+    <div class="field">
+        <div class="ui left icon input">
+        <i class="envelope icon"></i>
+        {{form.email(placeholder='Email')}}
+        </div>
+    </div>
+    <div class="field">
+        <div class="ui left icon input">
+        <i class="lock icon"></i>
+        {{form.password(placeholder='Password')}}
+        </div>
+    </div>
+    <div class="field">
+        <div class="ui checkbox">
+            {{form.remember_me}} {{form.remember_me.label}}
+        </div>
+        <a href="{{url_for('auth.password_reset_request')}}">Forgot password?</a>
+    </div>
+    {{form.submit(class_='ui fluid teal button')}}
+    </div>
+    {% include "_errors.html" %}
+</form>
+<div class="ui message">
+    New to us?
+    <a href="{{url_for('auth.register')}}">Register</a>
+</div>
+</div>
+</div>
+{% endblock %}
