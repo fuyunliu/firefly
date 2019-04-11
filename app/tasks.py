@@ -3,7 +3,7 @@
 from threading import Thread
 from flask import current_app, render_template
 from flask_mail import Message
-from . import mail
+from . import mail, celery
 
 
 def send_async_email(app, msg):
