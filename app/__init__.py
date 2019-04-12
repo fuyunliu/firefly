@@ -4,10 +4,14 @@ from flask import Flask
 from flask_mail import Mail
 from flask_sqlalchemy import SQLAlchemy
 from flask_login import LoginManager
-from config import config
+from celery import Celery
+from config import config, Config
 
 db = SQLAlchemy()
 mail = Mail()
+celery = Celery(__name__)
+celery.config_from_object(Config, namespace='CELERY')
+celery.autodiscover_tasks(['app.auth.tasks', 'app.main.tasks'])
 login_manager = LoginManager()
 login_manager.login_view = 'auth.login'
 
@@ -34,7 +38,3 @@ def create_app(config_name):
     app.register_blueprint(auth_blueprint, url_prefix='/auth')
 
     return app
-
-
-def create_celery():
-    pass
