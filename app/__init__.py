@@ -11,7 +11,7 @@ db = SQLAlchemy()
 mail = Mail()
 celery = Celery(__name__)
 celery.config_from_object(Config, namespace='CELERY')
-celery.autodiscover_tasks(['app.auth.tasks', 'app.main.tasks'])
+celery.autodiscover_tasks(['app.tasks'])
 login_manager = LoginManager()
 login_manager.login_view = 'auth.login'
 
