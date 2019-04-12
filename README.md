@@ -32,6 +32,11 @@ flask-session
 
 flask-httpauth
 
+run flask app
+`export FLASK_ENV=development`
+`export FLASK_APP=manage.py`
+`flask run`
+
 run celery worker
 
 `celery -A celery_worker.celery worker -l info`
