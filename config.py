@@ -17,6 +17,8 @@ class Config:
     FIREFLY_ADMIN = 'fuyunliux@163.com'
     SQLALCHEMY_TRACK_MODIFICATIONS = False
     SQLALCHEMY_RECORD_QUERIES = True
+    CELERY_BROKER_URL = 'redis://localhost:6379/0'
+    CELERY_ACCEPT_CONTENT = ['json', 'pickle']
 
     @staticmethod
     def init_app(app):
