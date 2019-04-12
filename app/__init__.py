@@ -5,7 +5,7 @@ from flask_mail import Mail
 from flask_sqlalchemy import SQLAlchemy
 from flask_login import LoginManager
 from celery import Celery
-from config import config, Config
+from .config import config, Config
 
 db = SQLAlchemy()
 mail = Mail()
