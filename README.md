@@ -29,4 +29,9 @@ https://github.com/VincentSit/ChinaMobilePhoneNumberRegex
 https://github.com/zenorocha/clipboard.js
 
 flask-session
+
 flask-httpauth
+
+run celery worker
+
+`celery -A celery_worker.celery worker -l info`
