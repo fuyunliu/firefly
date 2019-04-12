@@ -5,13 +5,10 @@ from flask_mail import Mail
 from flask_sqlalchemy import SQLAlchemy
 from flask_login import LoginManager
 from celery import Celery
-from .config import config, Config
+from .config import config
 
 db = SQLAlchemy()
 mail = Mail()
-celery = Celery(__name__)
-celery.config_from_object(Config, namespace='CELERY')
-celery.autodiscover_tasks(['app.email'])
 login_manager = LoginManager()
 login_manager.login_view = 'auth.login'
 
@@ -38,3 +35,20 @@ def create_app(config_name):
     app.register_blueprint(auth_blueprint, url_prefix='/auth')
 
     return app
+
+
+def create_celery(app):
+    celery = Celery(
+        app.import_name,
+        broker=app.config['CELERY_BROKER_URL'],
+        backend=app.config['CELERY_RESULT_BACKEND']
+    )
+    celery.config_from_object(app.config, namespace='CELERY')
+
+    class ContextTask(celery.Task):
+        def __call__(self, *args, **kwargs):
+            with app.app_context():
+                return self.run(*args, **kwargs)
+
+    celery.Task = ContextTask
+    return celery
