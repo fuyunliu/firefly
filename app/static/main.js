@@ -1,3 +1,45 @@
+class Firefly {
+
+    close_message() {
+        $('.message .close').on('click', function() {$(this).closest('.message').transition('fade');});
+    
+    }
+
+    dimmer_card() {
+        $('.special.card .image').dimmer({on: 'hover'});
+    }
+    
+    dropdown_menu() {
+        $('.ui.menu .ui.dropdown').dropdown({on: 'hover'});
+    }
+    
+    active_item() {
+        $('.ui.menu a.item').on('click', function() {$(this).addClass('active').siblings().removeClass('active');});
+    }
+    
+    fixed_menu() {
+        $('.masthead').visibility({
+            once: false,
+            onBottomPassed: function() {$('.fixed.menu').transition('fade in');},
+            onBottomPassedReverse: function() {$('.fixed.menu').transition('fade out');}
+        })
+    }
+    
+    show_sidebar() {
+        $('.ui.sidebar').sidebar('attach events', '.toc.item');
+    }
+    
+    validate_form() {
+    
+    }
+    
+}
+
+
+
+
+
+
 // close message
 $('.message .close')
   .on('click', function () {
