@@ -1,20 +1,14 @@
 body.pushable {
     background: #fff !important;
 }
-body.pushable .pusher {
-    height: 100%;
-}
-.pusher .ui.segment {
+.pusher .ui.segment.mainNavbar {
     padding-top: 0.5em;
     padding-bottom: 0.5em;
-}
-.SignForm {
-    height: 100%;
 }
 .SignForm .column {
     max-width: 450px;
 }
-.pusher .ui.segment .ui.menu .ui.button {
+.pusher .ui.segment.mainNavbar .ui.menu .ui.button {
     margin-left: 0.5em;
 }
 .ui.avatar.image {
@@ -36,3 +30,6 @@ body.pushable .pusher {
       display: block;
     }
   }
+.pusher .ui.container.pusherContent {
+    margin-top: 1rem;
+}

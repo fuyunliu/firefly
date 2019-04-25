@@ -6,12 +6,17 @@ from flask_sqlalchemy import SQLAlchemy
 from flask_login import LoginManager
 from flask_session import Session
 from celery import Celery
-from .config import config
+from config import config, Config
 
 db = SQLAlchemy()
 mail = Mail()
 sess = Session()
+
+celery_app = Celery(__name__)
+celery_app.config_from_object(Config, namespace='CELERY')
+
 login_manager = LoginManager()
+login_manager.session_protection = 'strong'
 login_manager.login_view = 'auth.login'
 
 
@@ -37,21 +42,7 @@ def create_app(config_name):
     from .auth import auth as auth_blueprint
     app.register_blueprint(auth_blueprint, url_prefix='/auth')
 
+    from .admin import admin as admin_blueprint
+    app.register_blueprint(admin_blueprint, url_prefix='/admin')
+
     return app
-
-
-def create_celery(app):
-    celery = Celery(
-        app.import_name,
-        broker=app.config['CELERY_BROKER_URL'],
-        backend=app.config['CELERY_RESULT_BACKEND']
-    )
-    celery.config_from_object(app.config, namespace='CELERY')
-
-    class ContextTask(celery.Task):
-        def __call__(self, *args, **kwargs):
-            with app.app_context():
-                return self.run(*args, **kwargs)
-
-    celery.Task = ContextTask
-    return celery

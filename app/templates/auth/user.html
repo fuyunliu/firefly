@@ -1,39 +1,74 @@
 {% extends "base.html" %}
-{% block title %}Firefly - Change Email{% endblock %}
-{% block nopusher %}{% endblock %}
+{% block title %}Firefly - Profile{% endblock %}
 
-{% block pusher_content %}
-<div class="ui container segment">
-<div class="ui special card">
-    <div class="blurring dimmable image">
-    <div class="ui dimmer">
-        <div class="content">
-        <div class="center">
-            <div class="ui inverted button">Edit Profile</div>
+{% block content %}
+<div class="ui grid">
+
+<div class="sixteen wide column">
+<div class="ui items">
+    <div class="item">
+        <div class="blurring dimmable image">
+            <div class="ui dimmer">
+                <div class="content">
+                    <div class="center">
+                        <div class="ui inverted button">Edit Avatar</div>
+                    </div>
+                </div>
+            </div>
+            <img src="{{user.gravatar()}}">
         </div>
+        <div class="middle aligned content">
+            <a class="header">{{user.username|title}}</a>
+            <div class="meta">
+                <span class="date">Joined in {{user.member_since.year}}</span>
+                <br>
+                <span class="date">Last seen {{user.last_seen|timesince}}</span>
+            </div>
+            <div class="description">
+                {{user.about_me|d('about me', true)}}
+            </div>
+            <div class="extra">
+            <div class="ui label">{{user.email}}</div>
+            <div class="ui right floated inverted blue button">Edit Profile</div>
+            </div>
         </div>
-    </div>
-    <img src="{{user.gravatar()}}">
-    </div>
-    <div class="content">
-    <a class="header">{{user.username|title}}</a>
-    <div class="meta">
-        <span class="date">Joined in {{user.member_since.year}}</span>
-        <br>
-        <span class="date">Last seen {{user.last_seen|timesince}}</span>
-    </div>
-    <div class="description">
-        {{user.about_me|d('about me', true)}}
-    </div>
-    </div>
-    <div class="extra content">
-        <span class="right floated">
-        {{user.followed.count() - 1}} Following
-        </span>
-        <span>
-        {{user.followers.count() - 1}} Followers
-        </span>
     </div>
 </div>
+</div>
+
+<div class="ten wide column">
+<div class="ui segment">
+<div class="ui secondary pointing menu">
+    <a class="item active" id="user-posts">Posts</a>
+    <a class="item" id="user-followers">Followers</a>
+    <a class="item" id="user-following">Following</a>
+    <div class="right item">
+    <div class="ui pointing dropdown">
+        <span>More</span>
+        <i class="dropdown icon"></i>
+        <div class="menu">
+            <a class="item">aaa</a>
+            <a class="item">bbb</a>
+            <a class="item">ccc</a>
+        </div>
+    </div>
+    </div>
+</div>
+<div class="text" id="ListContent">
+    <p>aaa</p>
+    <p>aaa</p>
+    <p>aaa</p>
+    <p>aaa</p>
+    <p>aaa</p>
+</div>
+</div>
+</div>
+
+<div class="six wide column">
+<div class="ui segment">
+    sidebar
+</div>
+</div>
+
 </div>
 {% endblock %}

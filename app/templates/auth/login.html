@@ -2,12 +2,12 @@
 {% block title %}Firefly - Login{% endblock %}
 {% block followbar %}{% endblock %}
 {% block sidebar %}{% endblock %}
-{% block pusher %}{% endblock %}
+{% block navbar %}{% endblock %}
 
-{% block nopusher_content %}
-<div class="ui middle aligned center aligned grid SignForm">
+{% block content %}
+<div class="ui center aligned grid SignForm">
 <div class="column">
-<h2 class="ui teal image header">
+<h2 class="ui blue image header">
     <div class="content">Login to your account</div>
 </h2>
 <form class="ui large form" action="{{url_for('auth.login')}}" method="POST">
@@ -29,9 +29,14 @@
         <div class="ui checkbox">
             {{form.remember_me}} {{form.remember_me.label}}
         </div>
+        <span>
+            &emsp;&emsp;&emsp;&emsp;&emsp;
+            &emsp;&emsp;&emsp;&emsp;&emsp;
+            &emsp;
+        </span>
         <a href="{{url_for('auth.password_reset_request')}}">Forgot password?</a>
     </div>
-    {{form.submit(class_='ui fluid teal button')}}
+    {{form.submit(class_='ui fluid blue button')}}
     </div>
     {% include "_errors.html" %}
 </form>

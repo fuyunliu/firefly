@@ -3,7 +3,12 @@
 from flask import current_app, render_template
 from flask_mail import Message
 from celery import shared_task
-from . import mail
+from . import mail, celery_app
+
+
+@shared_task
+def add(x, y):
+    return x + y
 
 
 @shared_task(serializer='pickle')

@@ -23,6 +23,8 @@ class LoginForm(FlaskForm):
         if not user.verify_password(self.password.data):
             self.password.errors.append('Invalid password.')
             return False
+        self.user = user
+        return True
 
 
 class RegistrationForm(FlaskForm):

@@ -1,6 +1,5 @@
 <!DOCTYPE html>
 <html><head>
-    {% block head %}
 
     <!-- Standard Meta -->
     {% block meta %}
@@ -17,7 +16,6 @@
     <link rel="stylesheet" href="{{url_for('static', filename='main.css')}}">
     {% endblock %}
 
-    {% endblock %}
   </head>
   <body class="pushable">
 
@@ -51,11 +49,10 @@
     </div>
     {% endblock %}
 
-    {% block pusher %}
     <div class="pusher">
 
     {% block navbar %}
-    <div class="ui inverted vertical segment">
+    <div class="ui inverted vertical segment mainNavbar">
         <div class="ui container">
             <div class="ui large secondary inverted pointing menu">
             <a class="toc item"><i class="sidebar icon"></i></a>
@@ -98,25 +95,12 @@
     </div>
     {% endfor %}
 
-    {% block pusher_content %}
-    {% endblock %}
+    <div class="ui container pusherContent">
+        {% block content %}
+        {% endblock %}
+    </div>
 
     </div>
-    {% endblock %}
-
-    {% block nopusher %}
-    <!-- Flash Messages -->
-    {% for category, message in get_flashed_messages(with_categories=True) %}
-    <div class="ui {{category}} message">
-        <i class="close icon"></i>
-        <p>{{message}}</p>
-    </div>
-    {% endfor %}
-
-    {% block nopusher_content %}
-    {% endblock %}
-
-    {% endblock %}
 
     {% block script %}
     <script

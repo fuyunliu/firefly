@@ -25,8 +25,6 @@ def before_request():
 @auth.route('/ping')
 @login_required
 def ping():
-    current_user.ping()
-    db.session.commit()
     return jsonify(current_user.dump())
 
 
@@ -43,21 +41,18 @@ def login():
         return redirect(url_for('main.index'))
     form = LoginForm()
     if form.validate_on_submit():
-        user = User.query.filter_by(email=form.email.data).first()
-        if user is not None and user.verify_password(form.password.data):
-            login_user(user, form.remember_me.data)
-            user.ping()
-            db.session.commit()
-            next = request.args.get('next')
-            if next is None or not next.startswith('/'):
-                next = url_for('main.index')
-            return redirect(next)
-        flash('Invalid username or password', 'error')
+        login_user(form.user, form.remember_me.data)
+        next = request.args.get('next')
+        if next is None or not next.startswith('/'):
+            next = url_for('main.index')
+        return redirect(next)
     return render_template('auth/login.html', form=form)
 
 
 @auth.route('/logout')
 def logout():
+    current_user.ping()
+    db.session.commit()
     logout_user()
     flash('You have been logged out.', 'info')
     return redirect(url_for('main.index'))

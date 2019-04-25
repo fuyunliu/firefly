@@ -1,6 +1,6 @@
 # -*- coding: utf-8 -*-
 
-from app import create_app, create_celery
+from app import celery_app, create_app
 
-celery = create_celery(create_app('default'))
-celery.autodiscover_tasks(['app.email'])
+app = create_app('default')
+app.app_context().push()
