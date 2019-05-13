@@ -28,8 +28,10 @@
                 {{user.about_me|d('about me', true)}}
             </div>
             <div class="extra">
-            <div class="ui label">{{user.email}}</div>
-            <div class="ui right floated inverted blue button">Edit Profile</div>
+            <div class="ui blue basic label">{{user.email}}</div>
+            <a class="ui right floated inverted blue button" href="{{url_for('auth.edit')}}">
+                Edit Profile
+            </a>
             </div>
         </div>
     </div>

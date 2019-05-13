@@ -250,7 +250,11 @@ class User(UserMixin, db.Model):
             Follow, Follow.followed_id == Post.author_id
             ).filter(Follow.follower_id == self.id)
 
-    def generate_auth_token(self, expiration):
+    def generate_auth_token(self, expiration=None):
+        expiration = expiration or \
+            int(
+                current_app.config['PERMANENT_SESSION_LIFETIME'].total_seconds()
+            )
         s = Serializer(current_app.config['SECRET_KEY'], expiration)
         return s.dumps({'id': self.id}).decode('utf-8')
 

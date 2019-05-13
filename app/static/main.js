@@ -57,6 +57,29 @@ class Firefly {
         })
     }
 
+    edit_profile() {
+        $('.editProfileForm .ui.button').on('click', function() {
+            let ele = this.parentElement.parentElement.querySelector('input');
+            let form = document.querySelector('.editProfileForm')
+            let url = form.getAttribute('data-url')
+            let token = form.getAttribute('data-token')
+            let data = {}
+            data[ele.name] = ele.value.trim()
+            fetch(url, {
+                method: 'PUT',
+                body: JSON.stringify(data),
+                headers: new Headers({
+                    'Authorization': 'Bearer ' + token,
+                    'Content-Type': 'application/json'
+                })
+            }).then(res => res.json())
+            .catch(error => console.error('Error:', error))
+            .then(res => console.log('Success:', res))
+
+        })
+    }
+
+
 }
 
 $(document).ready(function() {
@@ -68,4 +91,5 @@ $(document).ready(function() {
     f.fixed_menu();
     f.show_sidebar();
     f.validate_form();
+    f.edit_profile();
 })
