@@ -320,19 +320,19 @@ db.event.listen(Post.body, 'set', Post.on_change_body)
 
 
 class Comment(db.Model):
+    # 评论，回复使用一问一答形式，类似微信
+    # 分为对主题的评论，和对用户评论的回复
+    # 增加喜欢，不喜欢，没用，举报等等
+
     __tablename__ = 'comments'
 
     id = db.Column(db.Integer, primary_key=True)
     body = db.Column(db.Text)
-    body_html = db.Column(db.Text)
     timestamp = db.Column(db.DateTime(), index=True, default=datetime.utcnow)
     disabled = db.Column(db.Boolean)
     author_id = db.Column(db.Integer, db.ForeignKey('users.id'))
     post_id = db.Column(db.Integer, db.ForeignKey('posts.id'))
-
-    @staticmethod
-    def on_change_body():
-        pass
+    reply_id = db.Column(db.Integer, db.ForeignKey('users.id'))
 
     def dump(self):
         pass
@@ -340,6 +340,3 @@ class Comment(db.Model):
     @staticmethod
     def load():
         pass
-
-
-db.event.listen(Comment.body, 'set', Comment.on_change_body)
