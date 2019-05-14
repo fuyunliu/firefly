@@ -6,9 +6,9 @@ base_dir = os.path.abspath(os.path.dirname(__file__))
 
 
 class Config:
-    SERVER_NAME = '127.0.0.1:5000'
+    SERVER_NAME = 'localhost'
     SECRET_KEY = os.environ.get('SECRET_KEY') or 'hard to guess string'
-    SESSION_TYPE = 'redis'
+    SESSION_KEY_PREFIX = 'session:'
     MAIL_SERVER = 'smtp.163.com'
     MAIL_PORT = 465
     MAIL_USE_SSL = True

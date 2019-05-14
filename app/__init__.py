@@ -4,13 +4,14 @@ from flask import Flask
 from flask_mail import Mail
 from flask_sqlalchemy import SQLAlchemy
 from flask_login import LoginManager
-from flask_session import Session
+from flask_session import RedisSessionInterface
 from celery import Celery
+from redis import StrictRedis
 from config import config, Config
 
 db = SQLAlchemy()
+rdb = StrictRedis(decode_responses=True)
 mail = Mail()
-sess = Session()
 
 celery_app = Celery(__name__)
 celery_app.config_from_object(Config, namespace='CELERY')
@@ -30,10 +31,10 @@ def create_app(config_name):
     app.jinja_env.filters['timesince'] = timesince
     app.config.from_object(config[config_name])
     config[config_name].init_app(app)
+    app.session_interface = RedisSessionInterface(rdb, app.config['SESSION_KEY_PREFIX'])
 
     db.init_app(app)
     mail.init_app(app)
-    sess.init_app(app)
     login_manager.init_app(app)
 
     from .main import main as main_blueprint

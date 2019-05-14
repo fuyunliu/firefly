@@ -79,7 +79,7 @@ class Follow(db.Model):
     followed_id = db.Column(db.Integer, db.ForeignKey('users.id'),
                             primary_key=True)
     # 关注日期
-    timestamp = db.Column(db.DateTime(), default=datetime.utcnow)
+    create_time = db.Column(db.DateTime(), default=datetime.utcnow)
 
 
 class User(UserMixin, db.Model):
@@ -99,7 +99,8 @@ class User(UserMixin, db.Model):
     role_id = db.Column(db.Integer, db.ForeignKey('roles.id'))
     posts = db.relationship('Post', backref='author', lazy='dynamic')
 
-    # 我关注了谁，调用user.followed.all()返回我的关注列表，列表中的元素都是Follow实例
+    # 我关注了谁，调用user.followed.all()返回我的关注列表
+    # 列表中的元素都是Follow实例
     # 每一个Follow实例的follower和followed回引属性都指向相应的用户
     followed = db.relationship('Follow',
                                foreign_keys=[Follow.follower_id],
@@ -107,7 +108,8 @@ class User(UserMixin, db.Model):
                                lazy='dynamic',
                                cascade='all, delete-orphan'
                                )
-    # 我被谁关注了，调用user.followers.all()返回关注我的列表，列表中的元素都是Follow实例
+    # 我被谁关注了，调用user.followers.all()返回关注我的列表，
+    # 列表中的元素都是Follow实例
     # 每一个Follow实例的follower和followed回引属性都指向相应的用户
     followers = db.relationship('Follow',
                                 foreign_keys=[Follow.followed_id],
@@ -115,7 +117,11 @@ class User(UserMixin, db.Model):
                                 lazy='dynamic',
                                 cascade='all, delete-orphan'
                                 )
+    # 我的评论，包含了我对文章的评论和我对用户的回复
+    # 区别对文章的评论，和对用户的回复，就是看reply是不是存在
     comments = db.relationship('Comment', backref='author', lazy='dynamic')
+    # 我收到的回复，即别人对我的评论
+    replies = db.relationship('Comment', backref='reply', lazy='dynamic')
 
     @staticmethod
     def add_self_follows():
@@ -186,7 +192,7 @@ class User(UserMixin, db.Model):
         s = Serializer(current_app.config['SECRET_KEY'], expiration)
         return s.dumps(
             {'change_email': self.id, 'new_email': new_email}
-            ).decode('utf-8')
+        ).decode('utf-8')
 
     def change_email(self, token):
         s = Serializer(current_app.config['SECRET_KEY'])
@@ -248,13 +254,9 @@ class User(UserMixin, db.Model):
     def followed_posts(self):
         return Post.query.join(
             Follow, Follow.followed_id == Post.author_id
-            ).filter(Follow.follower_id == self.id)
+        ).filter(Follow.follower_id == self.id)
 
-    def generate_auth_token(self, expiration=None):
-        expiration = expiration or \
-            int(
-                current_app.config['PERMANENT_SESSION_LIFETIME'].total_seconds()
-            )
+    def generate_auth_token(self, expiration=3600):
         s = Serializer(current_app.config['SECRET_KEY'], expiration)
         return s.dumps({'id': self.id}).decode('utf-8')
 
@@ -304,8 +306,10 @@ class Post(db.Model):
     id = db.Column(db.Integer, primary_key=True)
     body = db.Column(db.Text)
     body_html = db.Column(db.Text)
-    timestamp = db.Column(db.DateTime(), index=True, default=datetime.utcnow)
     author_id = db.Column(db.Integer, db.ForeignKey('users.id'))
+    like_count = db.Column(db.Integer)
+    create_time = db.Column(db.DateTime(), index=True, default=datetime.utcnow)
+    update_time = db.Column(db.DateTime(), index=True, default=datetime.utcnow)
     comments = db.relationship('Comment', backref='post', lazy='dynamic')
 
     @staticmethod
@@ -324,19 +328,15 @@ db.event.listen(Post.body, 'set', Post.on_change_body)
 
 
 class Comment(db.Model):
-    # 评论，回复使用一问一答形式，类似微信
-    # 分为对主题的评论，和对用户评论的回复
-    # 增加喜欢，不喜欢，没用，举报等等
-
     __tablename__ = 'comments'
 
     id = db.Column(db.Integer, primary_key=True)
     body = db.Column(db.Text)
-    timestamp = db.Column(db.DateTime(), index=True, default=datetime.utcnow)
-    disabled = db.Column(db.Boolean)
     author_id = db.Column(db.Integer, db.ForeignKey('users.id'))
     post_id = db.Column(db.Integer, db.ForeignKey('posts.id'))
     reply_id = db.Column(db.Integer, db.ForeignKey('users.id'))
+    like_count = db.Column(db.Integer)
+    create_time = db.Column(db.DateTime(), index=True, default=datetime.utcnow)
 
     def dump(self):
         pass
@@ -344,3 +344,19 @@ class Comment(db.Model):
     @staticmethod
     def load():
         pass
+
+
+class UserLikePost(db.Model):
+    __tablename__ = 'user_like_post'
+    id = db.Column(db.Integer, primary_key=True)
+    user_id = db.Column(db.Integer, db.ForeignKey('users.id'))
+    post_id = db.Column(db.Integer, db.ForeignKey('posts.id'))
+    create_time = db.Column(db.DateTime(), index=True, default=datetime.utcnow)
+
+
+class UserLikeComment(db.Model):
+    __tablename__ = 'user_like_comment'
+    id = db.Column(db.Integer, primary_key=True)
+    user_id = db.Column(db.Integer, db.ForeignKey('users.id'))
+    comment_id = db.Column(db.Integer, db.ForeignKey('comments.id'))
+    create_time = db.Column(db.DateTime(), index=True, default=datetime.utcnow)
