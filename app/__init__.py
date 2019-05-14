@@ -10,7 +10,7 @@ from redis import StrictRedis
 from config import config, Config
 
 db = SQLAlchemy()
-rdb = StrictRedis(decode_responses=True)
+rdb = StrictRedis()
 mail = Mail()
 
 celery_app = Celery(__name__)

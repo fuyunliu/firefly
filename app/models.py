@@ -71,15 +71,45 @@ class Role(db.Model):
 
 
 class Follow(db.Model):
-    __tablename__ = 'follows'
-    # 关注者 id，我关注了谁，指的就是我
-    follower_id = db.Column(db.Integer, db.ForeignKey('users.id'),
-                            primary_key=True)
-    # 被关注者 id，我关注了谁，指的就是谁
-    followed_id = db.Column(db.Integer, db.ForeignKey('users.id'),
-                            primary_key=True)
-    # 关注日期
+    __tablename__ = 'me_follow_you'
+    me_id = db.Column(db.Integer, db.ForeignKey('users.id'), primary_key=True)
+    you_id = db.Column(db.Integer, db.ForeignKey('users.id'), primary_key=True)
     create_time = db.Column(db.DateTime(), default=datetime.utcnow)
+
+
+class Comment(db.Model):
+    __tablename__ = 'comments'
+
+    id = db.Column(db.Integer, primary_key=True)
+    body = db.Column(db.Text)
+    post_id = db.Column(db.Integer, db.ForeignKey('posts.id'))
+    author_id = db.Column(db.Integer, db.ForeignKey('users.id'))
+    reply_id = db.Column(db.Integer, db.ForeignKey('users.id'))
+    like_count = db.Column(db.Integer)
+    create_time = db.Column(db.DateTime(), index=True, default=datetime.utcnow)
+
+    def dump(self):
+        pass
+
+    @staticmethod
+    def load():
+        pass
+
+
+class UserLikePost(db.Model):
+    __tablename__ = 'user_like_post'
+    id = db.Column(db.Integer, primary_key=True)
+    user_id = db.Column(db.Integer, db.ForeignKey('users.id'))
+    post_id = db.Column(db.Integer, db.ForeignKey('posts.id'))
+    create_time = db.Column(db.DateTime(), index=True, default=datetime.utcnow)
+
+
+class UserLikeComment(db.Model):
+    __tablename__ = 'user_like_comment'
+    id = db.Column(db.Integer, primary_key=True)
+    user_id = db.Column(db.Integer, db.ForeignKey('users.id'))
+    comment_id = db.Column(db.Integer, db.ForeignKey('comments.id'))
+    create_time = db.Column(db.DateTime(), index=True, default=datetime.utcnow)
 
 
 class User(UserMixin, db.Model):
@@ -97,31 +127,35 @@ class User(UserMixin, db.Model):
     last_seen = db.Column(db.DateTime(), default=datetime.utcnow)
     avatar_hash = db.Column(db.String(32))
     role_id = db.Column(db.Integer, db.ForeignKey('roles.id'))
+
+    # 我关注的人
+    stars = db.relationship('User',
+                            secondary='me_follow_you',
+                            primaryjoin=id==Follow.me_id,
+                            lazy='dynamic')
+
+    # 我的粉丝
+    fans = db.relationship('User',
+                           secondary='me_follow_you',
+                           primaryjoin=id==Follow.you_id,
+                           lazy='dynamic')
+
+    # 我的文章
     posts = db.relationship('Post', backref='author', lazy='dynamic')
 
-    # 我关注了谁，调用user.followed.all()返回我的关注列表
-    # 列表中的元素都是Follow实例
-    # 每一个Follow实例的follower和followed回引属性都指向相应的用户
-    followed = db.relationship('Follow',
-                               foreign_keys=[Follow.follower_id],
-                               backref=db.backref('follower', lazy='joined'),
+    # 我的评论
+    comments = db.relationship('Comment',
+                               foreign_keys=[Comment.author_id],
+                               backref=db.backref('author', lazy='joined'),
                                lazy='dynamic',
-                               cascade='all, delete-orphan'
-                               )
-    # 我被谁关注了，调用user.followers.all()返回关注我的列表，
-    # 列表中的元素都是Follow实例
-    # 每一个Follow实例的follower和followed回引属性都指向相应的用户
-    followers = db.relationship('Follow',
-                                foreign_keys=[Follow.followed_id],
-                                backref=db.backref('followed', lazy='joined'),
-                                lazy='dynamic',
-                                cascade='all, delete-orphan'
-                                )
-    # 我的评论，包含了我对文章的评论和我对用户的回复
-    # 区别对文章的评论，和对用户的回复，就是看reply是不是存在
-    comments = db.relationship('Comment', backref='author', lazy='dynamic')
-    # 我收到的回复，即别人对我的评论
-    replies = db.relationship('Comment', backref='reply', lazy='dynamic')
+                               cascade='all, delete-orphan')
+
+    # 我收到的回复
+    replies = db.relationship('Comment',
+                              foreign_keys=[Comment.reply_id],
+                              backref=db.backref('reply', lazy='joined'),
+                              lazy='dynamic',
+                              cascade='all, delete-orphan')
 
     @staticmethod
     def add_self_follows():
@@ -232,29 +266,52 @@ class User(UserMixin, db.Model):
 
     def follow(self, user):
         if not self.is_following(user):
-            f = Follow(follower=self, followed=user)
+            f = Follow(me_id=self.id, you_id=user.id)
             db.session.add(f)
 
     def unfollow(self, user):
-        f = self.followed.filter_by(followed_id=user.id).first()
+        f = Follow.filter_by(me_id=self.id, you_id=user.id).first()
         if f is not None:
             db.session.delete(f)
 
     def is_following(self, user):
-        if user.id is None:
-            return False
-        return self.followed.filter_by(followed_id=user.id).first() is not None
+        f = Follow.filter_by(me_id=self.id, you_id=user.id).first()
+        return f is not None
 
     def is_followed_by(self, user):
-        if user.id is None:
-            return False
-        return self.followers.filter_by(follower_id=user.id).first() is not None
+        f = Follow.filter_by(me_id=user.id, you_id=self.id).first()
+        return f is not None
 
     @property
     def followed_posts(self):
         return Post.query.join(
-            Follow, Follow.followed_id == Post.author_id
-        ).filter(Follow.follower_id == self.id)
+            Follow, Follow.you_id == Post.author_id
+        ).filter(Follow.me_id == self.id)
+
+    def like_post(self, post):
+        pass
+
+    def dislike_post(self, post):
+        pass
+
+    def is_like_post(self, post):
+        if post.id is None:
+            return False
+
+
+    @property
+    def liked_posts(self):
+        pass
+
+    def like_comment(self, comment):
+        pass
+
+    def dislike_comment(self, comment):
+        pass
+
+    @property
+    def liked_comments(self):
+        pass
 
     def generate_auth_token(self, expiration=3600):
         s = Serializer(current_app.config['SECRET_KEY'], expiration)
@@ -325,38 +382,3 @@ class Post(db.Model):
 
 
 db.event.listen(Post.body, 'set', Post.on_change_body)
-
-
-class Comment(db.Model):
-    __tablename__ = 'comments'
-
-    id = db.Column(db.Integer, primary_key=True)
-    body = db.Column(db.Text)
-    author_id = db.Column(db.Integer, db.ForeignKey('users.id'))
-    post_id = db.Column(db.Integer, db.ForeignKey('posts.id'))
-    reply_id = db.Column(db.Integer, db.ForeignKey('users.id'))
-    like_count = db.Column(db.Integer)
-    create_time = db.Column(db.DateTime(), index=True, default=datetime.utcnow)
-
-    def dump(self):
-        pass
-
-    @staticmethod
-    def load():
-        pass
-
-
-class UserLikePost(db.Model):
-    __tablename__ = 'user_like_post'
-    id = db.Column(db.Integer, primary_key=True)
-    user_id = db.Column(db.Integer, db.ForeignKey('users.id'))
-    post_id = db.Column(db.Integer, db.ForeignKey('posts.id'))
-    create_time = db.Column(db.DateTime(), index=True, default=datetime.utcnow)
-
-
-class UserLikeComment(db.Model):
-    __tablename__ = 'user_like_comment'
-    id = db.Column(db.Integer, primary_key=True)
-    user_id = db.Column(db.Integer, db.ForeignKey('users.id'))
-    comment_id = db.Column(db.Integer, db.ForeignKey('comments.id'))
-    create_time = db.Column(db.DateTime(), index=True, default=datetime.utcnow)
