@@ -73,9 +73,9 @@ class Role(db.Model):
 class Follow(db.Model):
     __tablename__ = 'me_follow_you'
     me_id = db.Column(db.Integer, db.ForeignKey('users.id'), primary_key=True)
-    me = db.relationship('User', foreign_keys=[me_id], lazy='joined')
+    me = db.relationship('User', foreign_keys=[me_id])
     you_id = db.Column(db.Integer, db.ForeignKey('users.id'), primary_key=True)
-    you = db.relationship('User', foreign_keys=[you_id], lazy='joined')
+    you = db.relationship('User', foreign_keys=[you_id])
     create_time = db.Column(db.DateTime(), default=datetime.utcnow)
 
     def __repr__(self):
@@ -251,10 +251,14 @@ class User(UserMixin, db.Model):
             db.session.delete(f)
 
     def is_following(self, user):
+        if user.id is None:
+            return False
         f = Follow.query.filter_by(me_id=self.id, you_id=user.id).first()
         return f is not None
 
     def is_followed_by(self, user):
+        if user.id is None:
+            return False
         f = Follow.query.filter_by(me_id=user.id, you_id=self.id).first()
         return f is not None
 
@@ -265,24 +269,48 @@ class User(UserMixin, db.Model):
         ).filter(Follow.me_id == self.id)
 
     def like_post(self, post):
-        pass
+        if not self.is_like_post(post):
+            l = UserLikePost(user=self, post=post)
+            post.like_count += 1
+            db.session.add(l)
+            db.session.add(post)
 
     def dislike_post(self, post):
-        pass
+        l = UserLikePost.query.filter_by(user_id=self.id,
+                                         post_id=post.id).first()
+        if l is not None:
+            post.like_count -= 1
+            db.session.delete(l)
+            db.session.add(post)
 
     def is_like_post(self, post):
         if post.id is None:
             return False
+        l = UserLikePost.query.filter_by(user_id=self.id,
+                                         post_id=post.id).first()
+        return l is not None
 
     def like_comment(self, comment):
-        pass
+        if not self.is_like_comment(comment):
+            l = UserLikeComment(user=self, comment=comment)
+            comment.like_count += 1
+            db.session.add(l)
+            db.session.add(comment)
 
     def dislike_comment(self, comment):
-        pass
+        l = UserLikeComment.query.filter_by(user_id=self.id,
+                                            comment_id=comment.id).first()
+        if l is not None:
+            comment.like_count -= 1
+            db.session.delete(l)
+            db.session.add(comment)
 
-    @property
-    def liked_comments(self):
-        pass
+    def is_like_comment(self, comment):
+        if comment.id is None:
+            return False
+        l = UserLikeComment.query.filter_by(user_id=self.id,
+                                            comment_id=comment.id).first()
+        return l is not None
 
     def generate_auth_token(self, expiration=3600):
         s = Serializer(current_app.config['SECRET_KEY'], expiration)
@@ -347,6 +375,11 @@ class Post(db.Model):
                                   secondary='user_like_post',
                                   lazy='dynamic')
 
+    def __init__(self, **kwargs):
+        super().__init__(**kwargs)
+        if self.like_count is None:
+            self.like_count = 0
+
     @staticmethod
     def on_change_body():
         pass
@@ -381,6 +414,11 @@ class Comment(db.Model):
                                   secondary='user_like_comment',
                                   lazy='dynamic')
 
+    def __init__(self, **kwargs):
+        super().__init__(**kwargs)
+        if self.like_count is None:
+            self.like_count = 0
+
     def dump(self):
         pass
 
@@ -396,8 +434,10 @@ class UserLikePost(db.Model):
     __tablename__ = 'user_like_post'
     id = db.Column(db.Integer, primary_key=True)
     user_id = db.Column(db.Integer, db.ForeignKey('users.id'))
+    user = db.relationship('User')
     post_id = db.Column(db.Integer, db.ForeignKey('posts.id'))
-    create_time = db.Column(db.DateTime(), index=True, default=datetime.utcnow)
+    post = db.relationship('Post')
+    create_time = db.Column(db.DateTime(), default=datetime.utcnow)
 
     def __repr__(self):
         return f'<{self.user_id} like {self.post_id} at {self.create_time}>'
@@ -407,8 +447,10 @@ class UserLikeComment(db.Model):
     __tablename__ = 'user_like_comment'
     id = db.Column(db.Integer, primary_key=True)
     user_id = db.Column(db.Integer, db.ForeignKey('users.id'))
+    user = db.relationship('User')
     comment_id = db.Column(db.Integer, db.ForeignKey('comments.id'))
-    create_time = db.Column(db.DateTime(), index=True, default=datetime.utcnow)
+    comment = db.relationship('Comment')
+    create_time = db.Column(db.DateTime(), default=datetime.utcnow)
 
     def __repr__(self):
         return f'<{self.user_id} like {self.comment_id} at {self.create_time}>'
