@@ -4,6 +4,7 @@ from flask import Flask
 from flask_mail import Mail
 from flask_sqlalchemy import SQLAlchemy
 from flask_login import LoginManager
+from flask_migrate import Migrate
 from flask_session import RedisSessionInterface
 from celery import Celery
 from redis import StrictRedis
@@ -12,6 +13,7 @@ from config import config, Config
 db = SQLAlchemy()
 rdb = StrictRedis()
 mail = Mail()
+migrate = Migrate()
 
 celery_app = Celery(__name__)
 celery_app.config_from_object(Config, namespace='CELERY')
@@ -35,6 +37,7 @@ def create_app(config_name):
 
     db.init_app(app)
     mail.init_app(app)
+    migrate.init_app(app, db)
     login_manager.init_app(app)
 
     from .main import main as main_blueprint
