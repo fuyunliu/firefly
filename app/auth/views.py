@@ -4,12 +4,10 @@ from flask import render_template, redirect, request, url_for, flash, jsonify
 from flask_login import login_user, logout_user, login_required, current_user
 from . import auth
 from .. import db
-from ..models import User, Role, Permission
+from ..models import User
 from ..email import send_email
-from ..decorators import admin_required, permission_required
 from .forms import LoginForm, RegistrationForm, ChangePasswordForm, \
-    PasswordResetRequestForm, PasswordResetForm, ChangeEmailForm, \
-    EditProfileForm, EditProfileAdminForm
+    PasswordResetRequestForm, PasswordResetForm, ChangeEmailForm
 
 
 @auth.before_app_request

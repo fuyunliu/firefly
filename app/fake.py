@@ -2,6 +2,9 @@
 from random import randint
 from sqlalchemy.exc import IntegrityError
 from faker import Faker
+import sys
+print(sys.path)
+
 from . import db
 from .models import User, Post
 

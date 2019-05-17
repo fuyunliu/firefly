@@ -109,6 +109,18 @@
     crossorigin="anonymous"></script>
     <script src="{{url_for('static', filename='semantic.min.js')}}"></script>
     <script src="{{url_for('static', filename='main.js')}}"></script>
+    <script>
+    $(document).ready(function () {
+        var f = new Firefly()
+        f.active_item();
+        f.close_message();
+        f.dropdown_menu();
+        f.fixed_menu();
+        f.show_sidebar();
+        {% block inner_script %}
+        {% endblock %}
+    });
+    </script>
     {% endblock %}
 
 </body></html>

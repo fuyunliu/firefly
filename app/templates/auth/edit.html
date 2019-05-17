@@ -44,3 +44,7 @@
 </div>
 
 {% endblock %}
+
+{% inner_script %}
+f.edit_profile({{url_for('api.me', _external=True)}}, {{token}})
+{% endblock %}
