@@ -62,7 +62,7 @@ class Firefly {
 
     edit_profile(url, token) {
         $('.editProfileForm .ui.button').on('click', function () {
-            let ele = this.parentElement.parentElement.querySelector('input');
+            let ele = this.closest('.fields').querySelector('input');
             let data = {}
             data[ele.name] = ele.value.trim()
             fetch(url, {
@@ -77,6 +77,18 @@ class Firefly {
                 .then(res => console.log('Success:', res))
 
         })
+    }
+
+    get_all_posts(url, token) {
+        fetch(url, {
+            method: 'GET',
+            headers: new Headers({
+                'Authorization': 'Bearer ' + token,
+                'Content-Type': 'application/json'
+            })
+        }).then(res => res.json())
+            .catch(error => console.error('Error:', error))
+            .then(res => console.log('Success:', res))
     }
 
 

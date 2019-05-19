@@ -30,3 +30,13 @@
 .pusher .ui.container.pusherContent {
     margin-top: 1rem;
 }
+.ui.card.noBorderCard {
+    box-shadow: none;
+    -webkit-box-shadow: none;
+}
+.ui.card.noBorderCard > .extra {
+    border-top: none !important;
+}
+.ui.card.noBorderCard > .content {
+    border-top: none !important;
+}

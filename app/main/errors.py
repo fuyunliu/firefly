@@ -23,6 +23,16 @@ def page_not_found(e):
     return render_template('errors/404.html'), 404
 
 
+@main.app_errorhandler(405)
+def method_not_allowed(e):
+    if request.accept_mimetypes.accept_json and not \
+            request.accept_mimetypes.accept_html:
+        response = jsonify({'error': 'method not allowed'})
+        response.status_code = 405
+        return response
+    return render_template('errors/405.html'), 405
+
+
 @main.app_errorhandler(500)
 def internal_server_error(e):
     if request.accept_mimetypes.accept_json and not \

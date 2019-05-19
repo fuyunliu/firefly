@@ -4,7 +4,7 @@ import hashlib
 from datetime import datetime
 from itsdangerous import TimedJSONWebSignatureSerializer as Serializer
 from werkzeug.security import generate_password_hash, check_password_hash
-from flask import current_app
+from flask import current_app, url_for
 from flask_login import UserMixin, AnonymousUserMixin
 from . import db, login_manager
 
@@ -78,9 +78,6 @@ class Follow(db.Model):
     you = db.relationship('User', foreign_keys=[you_id])
     create_time = db.Column(db.DateTime(), default=datetime.utcnow)
 
-    def __repr__(self):
-        return f'<{self.me_id} follow {self.you_id} at {self.create_time}>'
-
 
 class User(UserMixin, db.Model):
     __tablename__ = 'users'
@@ -130,7 +127,7 @@ class User(UserMixin, db.Model):
 
     # 我喜欢的评论
     liked_comments = db.relationship('Comment',
-                                     secondary='UserLikeComment',
+                                     secondary='user_like_comment',
                                      lazy='dynamic')
 
     @staticmethod
@@ -325,7 +322,7 @@ class User(UserMixin, db.Model):
             return None
         return User.query.get(data.get('id'))
 
-    def dump(self):
+    def dumps(self):
         user = {
             'id': self.id,
             'email': self.email,
@@ -334,6 +331,14 @@ class User(UserMixin, db.Model):
             'last_seen': self.last_seen,
         }
         return user
+
+    @staticmethod
+    def loads(data):
+        return User(
+            email=data['email'],
+            username=data['username'],
+            password=data['password']
+        )
 
     def __repr__(self):
         return f'<User {self.username}>'
@@ -360,12 +365,16 @@ class Post(db.Model):
     __tablename__ = 'posts'
 
     id = db.Column(db.Integer, primary_key=True)
+    title = db.Column(db.String(64), index=True)
     body = db.Column(db.Text)
     body_html = db.Column(db.Text)
     author_id = db.Column(db.Integer, db.ForeignKey('users.id'))
+    author_name = db.Column(db.String(64))
     like_count = db.Column(db.Integer)
     create_time = db.Column(db.DateTime(), index=True, default=datetime.utcnow)
-    update_time = db.Column(db.DateTime(), index=True, default=datetime.utcnow)
+
+    # todo on update
+    update_time = db.Column(db.DateTime(), default=datetime.utcnow)
 
     # 文章的评论
     comments = db.relationship('Comment', backref='post', lazy='dynamic')
@@ -380,22 +389,30 @@ class Post(db.Model):
         if self.like_count is None:
             self.like_count = 0
 
-    @staticmethod
-    def on_change_body():
-        pass
+    def dumps(self):
+        data = {
+            'id': self.id,
+            'title': self.title,
+            'body': self.body,
+            'body_html': self.body_html,
+            'create_time': self.create_time,
+            'update_time': self.update_time,
+            'author_id': self.author_id,
+            'author_name': self.author_name,
+            'like_count': self.like_count,
+            'url': url_for('api.get_post', id=self.id),
+        }
+        return data
 
-    def dump(self):
-        pass
-
     @staticmethod
-    def load():
-        pass
+    def loads(data):
+        return Post(
+            title=data['title'],
+            body=data['body']
+        )
 
     def __repr__(self):
         return f'<Post {self.id}>'
-
-
-db.event.listen(Post.body, 'set', Post.on_change_body)
 
 
 class Comment(db.Model):
@@ -419,13 +436,6 @@ class Comment(db.Model):
         if self.like_count is None:
             self.like_count = 0
 
-    def dump(self):
-        pass
-
-    @staticmethod
-    def load():
-        pass
-
     def __repr__(self):
         return f'<Comment {self.id}>'
 
@@ -439,9 +449,6 @@ class UserLikePost(db.Model):
     post = db.relationship('Post')
     create_time = db.Column(db.DateTime(), default=datetime.utcnow)
 
-    def __repr__(self):
-        return f'<{self.user_id} like {self.post_id} at {self.create_time}>'
-
 
 class UserLikeComment(db.Model):
     __tablename__ = 'user_like_comment'
@@ -451,6 +458,3 @@ class UserLikeComment(db.Model):
     comment_id = db.Column(db.Integer, db.ForeignKey('comments.id'))
     comment = db.relationship('Comment')
     create_time = db.Column(db.DateTime(), default=datetime.utcnow)
-
-    def __repr__(self):
-        return f'<{self.user_id} like {self.comment_id} at {self.create_time}>'

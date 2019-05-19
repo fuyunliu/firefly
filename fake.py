@@ -2,11 +2,9 @@
 from random import randint
 from sqlalchemy.exc import IntegrityError
 from faker import Faker
-import sys
-print(sys.path)
 
-from . import db
-from .models import User, Post
+from app import db, create_app
+from app.models import User, Post
 
 
 def users(count=100):
@@ -36,9 +34,23 @@ def posts(count=100):
     for _ in range(count):
         user = User.query.offset(randint(0, user_count - 1)).first()
         post = Post(
+            title=fake.sentence(),
             body=fake.text(),
-            timestamp=fake.past_date(),
-            author=user
+            create_time=fake.past_date(),
+            update_time=fake.past_date(),
+            author=user,
+            author_name=user.username
         )
         db.session.add(post)
     db.session.commit()
+
+
+def run():
+    app = create_app('default')
+    with app.app_context():
+        # users(100)
+        posts(100)
+
+
+if __name__ == "__main__":
+    run()

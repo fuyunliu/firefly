@@ -23,7 +23,7 @@ def before_request():
 @auth.route('/ping')
 @login_required
 def ping():
-    return jsonify(current_user.dump())
+    return jsonify(current_user.dumps())
 
 
 @auth.route('/unconfirmed')

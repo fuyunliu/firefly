@@ -1,2 +1,69 @@
 {% extends "base.html" %}
 {% block title%}Homepage - Firefly{% endblock %}
+
+{% block content %}
+<div class="ui segment">
+<div class="ui secondary pointing menu">
+    <a class="item active" id="all-posts">Posts</a>
+    <a class="item" id="user-followers">Followers</a>
+    <a class="item" id="user-following">Following</a>
+    <div class="right item">
+    <div class="ui pointing dropdown">
+        <span>More</span>
+        <i class="dropdown icon"></i>
+        <div class="menu">
+            <a class="item">aaa</a>
+            <a class="item">bbb</a>
+            <a class="item">ccc</a>
+        </div>
+    </div>
+    </div>
+</div>
+<div class="text" id="ListContent">
+
+<div class="ui fluid card noBorderCard">
+  <div class="content">
+    <div class="right floated meta">1 Hour Ago</div>
+    <div class="header">Cute Dog</div>
+    <div class="meta">fuyun</div>
+    <div class="description">
+      <p>aaaaaaaaaaaa1111111111aaaaaaaaa</p>
+    </div>
+  </div>
+  <div class="extra content">
+    <span class="left floated like">
+      <i class="like icon"></i>
+      Like
+    </span>
+    <span class="right floated star">
+      <i class="star icon"></i>
+      Favorite
+    </span>
+  </div>
+</div>
+
+<div class="ui divider"></div>
+
+<div class="ui fluid card noBorderCard">
+    <div class="content">
+      <div class="right floated meta">1 Hour Ago</div>
+      <div class="header">Cute Dog</div>
+      <div class="description">
+        <p>aaaaaaaaaaaa1111111111aaaaaaaaa</p>
+      </div>
+    </div>
+    <div class="extra content">
+      <span class="left floated like">
+        <i class="like icon"></i>
+        Like
+      </span>
+      <span class="right floated star">
+        <i class="star icon"></i>
+        Favorite
+      </span>
+    </div>
+  </div>
+
+</div>
+</div>
+{% endblock %}
