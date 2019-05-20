@@ -3,9 +3,7 @@
 from flask import current_app, g, jsonify, request, url_for
 from flask.views import MethodView
 from .. import db
-from ..models import Post, Permission
-from . import api
-from .auth import auth
+from ..models import Permission, Post
 from .errors import forbidden
 
 

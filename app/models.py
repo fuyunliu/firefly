@@ -83,8 +83,8 @@ class User(UserMixin, db.Model):
     __tablename__ = 'users'
 
     id = db.Column(db.Integer, primary_key=True)
-    username = db.Column(db.String(64), unique=True, index=True)
     email = db.Column(db.String(64), unique=True, index=True)
+    username = db.Column(db.String(64), unique=True, index=True)
     passwd_hash = db.Column(db.String(128))
     confirmed = db.Column(db.Boolean, default=False)
     name = db.Column(db.String(64))
@@ -372,9 +372,9 @@ class Post(db.Model):
     author_name = db.Column(db.String(64))
     like_count = db.Column(db.Integer)
     create_time = db.Column(db.DateTime(), index=True, default=datetime.utcnow)
-
-    # todo on update
-    update_time = db.Column(db.DateTime(), default=datetime.utcnow)
+    update_time = db.Column(db.DateTime(),
+                            default=datetime.utcnow,
+                            onupdate=datetime.utcnow)
 
     # 文章的评论
     comments = db.relationship('Comment', backref='post', lazy='dynamic')

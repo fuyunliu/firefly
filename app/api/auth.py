@@ -1,9 +1,8 @@
 # -*- coding: utf-8 -*-
 
-from flask import g, jsonify
+from flask import g
 from flask_httpauth import HTTPTokenAuth
 from ..models import User
-from . import api
 
 auth = HTTPTokenAuth()
 

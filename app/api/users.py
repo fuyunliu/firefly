@@ -5,7 +5,7 @@ from flask.views import MethodView
 from . import api
 from .auth import auth
 from .. import db
-from ..models import User
+from ..models import User, Permission
 from ..email import send_email
 from .errors import forbidden
 
@@ -48,16 +48,16 @@ class UserAPI(MethodView):
             {'Location': url_for('api.get_user', id=user.id)}
 
     def put(self, user_id):
-        # 修改当前用户，或者某一用户
-        post = Post.query.get_or_404(post_id)
-        if g.current_user != post.author and \
+        user = User.query.get_or_404(user_id)
+        if g.current_user != user and \
                 not g.current_user.can(Permission.ADMIN):
             return forbidden('Insufficient permissions')
-        post.title = request.json.get('title', post.title)
-        post.body = request.json.get('body', post.body)
-        db.session.add(post)
+        user.name = request.json.get('name', user.name)
+        user.location = request.json.get('location', user.location)
+        user.about_me = request.json.get('about_me', user.about_me)
+        db.session.add(user)
         db.session.commit()
-        return jsonify(post.dumps())
+        return jsonify(user.dumps())
 
     def delete(self, user_id):
         # 删除用户，设置 7 天期限，放 celery 删除，发送邮件
@@ -65,20 +65,3 @@ class UserAPI(MethodView):
         db.session.delete(user)
         db.session.commit()
         return 'ok'
-
-
-@api.route('/me', methods=['PUT'])
-@auth.login_required
-def me():
-    name = request.json.get('name')
-    if name is not None:
-        g.current_user.name = name
-    location = request.json.get('location')
-    if location is not None:
-        g.current_user.location = location
-    about_me = request.json.get('about_me')
-    if about_me is not None:
-        g.current_user.about_me = about_me
-    db.session.add(g.current_user)
-    db.session.commit()
-    return jsonify(g.current_user.dumps())
