@@ -1,34 +1,10 @@
-.pusher .ui.segment.mainNavbar {
-    padding-top: 0.5em;
-    padding-bottom: 0.5em;
-}
 .SignForm .column {
     max-width: 450px;
-}
-.pusher .ui.segment.mainNavbar .ui.menu .ui.button {
-    margin-left: 0.5em;
 }
 .ui.avatar.image {
     width: 1.5em;
     height: 1.5em;
     border-radius: 0;
-}
-.secondary.pointing.menu .toc.item {
-    display: none;
-}
-@media only screen and (max-width: 700px) {
-    .ui.fixed.menu {
-      display: none !important;
-    }
-    .secondary.pointing.menu > .item {
-      display: none;
-    }
-    .secondary.pointing.menu .toc.item {
-      display: block;
-    }
-  }
-.pusher .ui.container.pusherContent {
-    margin-top: 1rem;
 }
 .ui.card.noBorderCard {
     box-shadow: none;

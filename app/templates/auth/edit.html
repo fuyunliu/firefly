@@ -10,7 +10,9 @@
             <h4>Name</h4>
         </div>
         <div class="eight wide field">
-            <input type="text" name="name" placeholder="name" value="{{current_user.name|d('', true)}}">
+            <input type="text" name="name" placeholder="name"
+            value="{{current_user.name|d('', true)}}"
+            user-id="{{current_user.id}}">
         </div>
         <div class="four wide field">
             <div class="ui blue button">Save</div>
@@ -22,7 +24,9 @@
             <h4>Location</h4>
         </div>
         <div class="eight wide field">
-            <input type="text" name="location" placeholder="location" value="{{current_user.location|d('', true)}}">
+            <input type="text" name="location" placeholder="location"
+            value="{{current_user.location|d('', true)}}"
+            user-id="{{current_user.id}}">
         </div>
         <div class="four wide field">
             <div class="ui blue button">Save</div>
@@ -34,7 +38,9 @@
             <h4>About me</h4>
         </div>
         <div class="eight wide field">
-            <input type="text" name="about_me" placeholder="about me" value="{{current_user.about_me|d('', true)}}">
+            <input type="text" name="about_me" placeholder="about me"
+            value="{{current_user.about_me|d('', true)}}"
+            user-id="{{current_user.id}}">
         </div>
         <div class="four wide field">
             <div class="ui blue button">Save</div>
@@ -43,8 +49,4 @@
 
 </div>
 
-{% endblock %}
-
-{% block inner_script %}
-    f.edit_profile("{{url_for('api.me', _external=True)}}", "{{token}}")
 {% endblock %}

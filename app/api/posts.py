@@ -17,22 +17,18 @@ class PostAPI(MethodView):
             post = Post.query.get_or_404(post_id)
             return jsonify(post.dumps())
         else:
-            page = request.args.get('page', 1, type=int)
-            pagination = Post.query.paginate(
-                page,
-                per_page=current_app.config['FIREFLY_PER_PAGE_SIZE'],
-                error_out=False)
-            prev = None
-            if pagination.has_prev:
-                prev = url_for('api.post_api', page=page - 1)
-            next = None
-            if pagination.has_next:
-                next = url_for('api.post_api', page=page + 1)
+            size = current_app.config['FIREFLY_PER_PAGE_SIZE']
+            max_id = request.args.get('max_id', None, type=int)
+            if max_id is None:
+                items = Post.query.order_by(Post.id.desc()).limit(size)
+            else:
+                items = Post.query.filter(Post.id < max_id)\
+                        .order_by(Post.id.desc()).limit(size)
             return jsonify({
-                'posts': [p.dumps() for p in pagination.items],
-                'prev': prev,
-                'next': next,
-                'count': pagination.total
+                'posts': [p.dumps() for p in items],
+                'next': url_for('api.post_api',
+                                max_id=min(p.id for p in items),
+                                _external=True) if items.count() else None
             })
 
     def post(self):

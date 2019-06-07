@@ -1,10 +1,50 @@
 # -*- coding: utf-8 -*-
 
-from flask import Blueprint
+import json
+from flask import Blueprint, g, jsonify, request
+from flask_httpauth import HTTPTokenAuth
 from .users import UserAPI
 from .posts import PostAPI
+from .errors import unauthorized, forbidden
+from ..models import User
 
 api = Blueprint('api', __name__)
+auth = HTTPTokenAuth()
+
+
+# @auth.verify_token
+def verify_token(token):
+    g.current_user = User.verify_auth_token(token)
+    return g.current_user is not None
+
+
+# @auth.error_handler
+def auth_error():
+    return unauthorized('Invalid credentials')
+
+
+# @api.before_request
+# @auth.login_required
+def before_request():
+    if not g.current_user.is_anonymous and not g.current_user.confirmed:
+        return forbidden('Unconfirmed account')
+
+
+# @api.after_request
+# @auth.login_required
+def after_request(response):
+    data = json.loads(response.get_data())
+    data['token'] = g.current_user.generate_auth_token()
+    response.set_data(json.dumps(data))
+    return response
+
+
+# @api.route('/tokens', methods=['POST'])
+def create_token():
+    return jsonify({
+        'token': g.current_user.generate_auth_token(),
+        'expiration': 3600,
+    })
 
 
 def register_api(view, rule, endpoint, primary_key='id', converter='int'):

@@ -1,6 +1,6 @@
 # -*- coding: utf-8 -*-
 
-from flask import g, request, jsonify, current_app, url_for, redirect
+from flask import g, request, jsonify, current_app, url_for
 from flask.views import MethodView
 from .. import db
 from ..models import User, Permission
@@ -24,10 +24,10 @@ class UserAPI(MethodView):
                 error_out=False)
             prev = None
             if pagination.has_prev:
-                prev = url_for('api.user_api', page=page - 1)
+                prev = url_for('api.user_api', page=page - 1, _external=True)
             next = None
             if pagination.has_next:
-                next = url_for('api.user_api', page=page + 1)
+                next = url_for('api.user_api', page=page + 1, _external=True)
             return jsonify({
                 'users': [p.dumps() for p in pagination.items],
                 'prev': prev,

@@ -11,7 +11,7 @@ from redis import StrictRedis
 from config import config, Config
 
 db = SQLAlchemy()
-rdb = StrictRedis()
+sr = StrictRedis()
 mail = Mail()
 migrate = Migrate()
 
@@ -33,7 +33,10 @@ def create_app(config_name):
     app.jinja_env.filters['timesince'] = timesince
     app.config.from_object(config[config_name])
     config[config_name].init_app(app)
-    app.session_interface = RedisSessionInterface(rdb, app.config['SESSION_KEY_PREFIX'])
+    app.session_interface = RedisSessionInterface(
+        sr,
+        app.config['SESSION_KEY_PREFIX']
+    )
 
     db.init_app(app)
     mail.init_app(app)

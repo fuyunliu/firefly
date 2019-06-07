@@ -6,7 +6,7 @@ from itsdangerous import TimedJSONWebSignatureSerializer as Serializer
 from werkzeug.security import generate_password_hash, check_password_hash
 from flask import current_app, url_for
 from flask_login import UserMixin, AnonymousUserMixin
-from . import db, login_manager
+from . import db, login_manager, timesince
 
 
 class Permission:
@@ -92,6 +92,7 @@ class User(UserMixin, db.Model):
     about_me = db.Column(db.Text())
     member_since = db.Column(db.DateTime(), default=datetime.utcnow)
     last_seen = db.Column(db.DateTime(), default=datetime.utcnow)
+    token_create = db.Column(db.DateTime(), default=datetime.utcnow)
     avatar_hash = db.Column(db.String(32))
     role_id = db.Column(db.Integer, db.ForeignKey('roles.id'))
 
@@ -148,6 +149,10 @@ class User(UserMixin, db.Model):
         if self.email is not None and self.avatar_hash is None:
             self.avatar_hash = self.gravatar_hash()
         self.follow(self)
+
+    @property
+    def token_timestamp(self):
+        return int(self.token_create.timestamp() * 1000)
 
     @property
     def password(self):
@@ -311,24 +316,34 @@ class User(UserMixin, db.Model):
 
     def generate_auth_token(self, expiration=3600):
         s = Serializer(current_app.config['SECRET_KEY'], expiration)
-        return s.dumps({'id': self.id}).decode('utf-8')
+        self.token_create = datetime.utcnow()
+        db.session.add(self)
+        db.session.commit()
+        return s.dumps({
+            'id': self.id,
+            'timestamp': self.token_timestamp
+        }).decode('utf-8')
 
     @staticmethod
     def verify_auth_token(token):
         s = Serializer(current_app.config['SECRET_KEY'])
         try:
             data = s.loads(token.encode('utf-8'))
-        except:
+            user = User.query.get(data.get('id'))
+            assert data.get('timestamp') == user.token_timestamp
+            return user
+        except Exception as e:
+            print(e)
             return None
-        return User.query.get(data.get('id'))
 
     def dumps(self):
         user = {
             'id': self.id,
             'email': self.email,
             'username': self.username,
-            'member_since': self.member_since,
-            'last_seen': self.last_seen,
+            'member_since': self.member_since.year,
+            'last_seen': timesince(self.last_seen),
+            'url': url_for('api.user_api', user_id=self.id, _external=True)
         }
         return user
 
@@ -395,12 +410,12 @@ class Post(db.Model):
             'title': self.title,
             'body': self.body,
             'body_html': self.body_html,
-            'create_time': self.create_time,
-            'update_time': self.update_time,
+            'create_time': timesince(self.create_time),
+            'update_time': timesince(self.update_time),
             'author_id': self.author_id,
             'author_name': self.author_name,
             'like_count': self.like_count,
-            'url': url_for('api.get_post', id=self.id),
+            'url': url_for('api.post_api', post_id=self.id, _external=True)
         }
         return data
 
