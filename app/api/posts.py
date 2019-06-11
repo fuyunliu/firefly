@@ -3,7 +3,7 @@
 from flask import current_app, g, jsonify, request, url_for, redirect
 from flask.views import MethodView
 from .. import db
-from ..models import Permission, Post
+from ..models import Permission, Post, Comment
 from .errors import forbidden
 
 
@@ -13,20 +13,20 @@ class PostAPI(MethodView):
         if post_id is not None:
             post = Post.query.get_or_404(post_id)
             return jsonify(post.dumps())
+
+        size = current_app.config['FIREFLY_PER_PAGE_SIZE']
+        max_id = request.args.get('max_id', None, type=int)
+        if max_id is None:
+            items = Post.query.order_by(Post.id.desc()).limit(size)
         else:
-            size = current_app.config['FIREFLY_PER_PAGE_SIZE']
-            max_id = request.args.get('max_id', None, type=int)
-            if max_id is None:
-                items = Post.query.order_by(Post.id.desc()).limit(size)
-            else:
-                items = Post.query.filter(Post.id < max_id)\
-                        .order_by(Post.id.desc()).limit(size)
-            return jsonify({
-                'posts': [p.dumps() for p in items],
-                'next': url_for('api.post_api',
-                                max_id=min(p.id for p in items),
-                                _external=True) if items.count() else None
-            })
+            items = Post.query.filter(Post.id < max_id)\
+                .order_by(Post.id.desc()).limit(size)
+        return jsonify({
+            'posts': [p.dumps() for p in items],
+            'next': url_for('api.post_api',
+                            max_id=min(p.id for p in items),
+                            _external=True) if items.count() else None
+        })
 
     def post(self):
         post = Post.loads(request.json)
@@ -56,18 +56,52 @@ class PostAPI(MethodView):
 
 
 class PostCommentAPI(MethodView):
+    """
+    https://127.0.0.1:5000/api/posts/1/comments
+    GET get post all comments
+    POST create a comment for post
+
+    """
 
     def get(self, post_id):
         post = Post.query.get_or_404(post_id)
+        page = request.args.get('page', 1, type=int)
+        pagination = post.comments.paginate(
+            page,
+            per_page=current_app.config['FIREFLY_PER_PAGE_SIZE'],
+            error_out=False)
+        prev = None
+        if pagination.has_prev:
+            prev = url_for('api.post_comment_api', post_id=post_id,
+                           page=page - 1, _external=True)
+        next = None
+        if pagination.has_next:
+            next = url_for('api.post_comment_api', post_id=post_id,
+                           page=page + 1, _external=True)
+        return jsonify({
+            'comments': [p.dumps() for p in pagination.items],
+            'prev': prev,
+            'next': next,
+            'count': pagination.total
+        })
+
+    def post(self, post_id):
+        post = Post.query.get_or_404(post_id)
+        comment = Comment.loads(request.json)
+        comment.post = post
+        comment.author = author
+        comment.reply = reply
+        db.session.add(comment)
+        db.session.commit()
 
 
-class UserFollowingPostAPI(MethodView):
+class PostCollectAPI(MethodView):
 
-    def get(self):
-        pass
-
-
-class UserLikePostAPI(MethodView):
+    """
+    https://127.0.0.1:5000/api/posts/1/collects
+    POST  user collect a post
+    DELETE user discollect a post
+    """
 
     def get(self):
         # show user like post
