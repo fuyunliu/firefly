@@ -10,30 +10,28 @@ from .errors import forbidden
 
 class UserAPI(MethodView):
 
-    decorators = []
-
     def get(self, user_id):
         if user_id is not None:
             user = User.query.get_or_404(user_id)
             return jsonify(user.dumps())
-        else:
-            page = request.args.get('page', 1, type=int)
-            pagination = User.query.paginate(
-                page,
-                per_page=current_app.config['FIREFLY_PER_PAGE_SIZE'],
-                error_out=False)
-            prev = None
-            if pagination.has_prev:
-                prev = url_for('api.user_api', page=page - 1, _external=True)
-            next = None
-            if pagination.has_next:
-                next = url_for('api.user_api', page=page + 1, _external=True)
-            return jsonify({
-                'users': [p.dumps() for p in pagination.items],
-                'prev': prev,
-                'next': next,
-                'count': pagination.total
-            })
+
+        page = request.args.get('page', 1, type=int)
+        pagination = User.query.paginate(
+            page,
+            per_page=current_app.config['FIREFLY_PER_PAGE_SIZE'],
+            error_out=False)
+        prev = None
+        if pagination.has_prev:
+            prev = url_for('api.user_api', page=page - 1, _external=True)
+        next = None
+        if pagination.has_next:
+            next = url_for('api.user_api', page=page + 1, _external=True)
+        return jsonify({
+            'users': [p.dumps() for p in pagination.items],
+            'prev': prev,
+            'next': next,
+            'count': pagination.total
+        })
 
     def post(self):
         user = User.loads(request.json)
@@ -63,3 +61,21 @@ class UserAPI(MethodView):
         db.session.delete(user)
         db.session.commit()
         return 'ok'
+
+
+class UserLikeAPI(MethodView):
+    """
+    https://127.0.0.1:5000/api/users/1/likes
+    """
+    def get(self, user_id):
+        user = User.query.get_or_404(user_id)
+
+
+class UserCollectAPI(MethodView):
+    """
+    https://127.0.0.1:5000/api/users/1/collects
+    """
+    def get(self, user_id):
+        # show user collect posts
+        pass
+

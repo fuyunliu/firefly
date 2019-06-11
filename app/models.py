@@ -455,6 +455,15 @@ class Comment(db.Model):
         return f'<Comment {self.id}>'
 
 
+class Favorite(db.Model):
+    __tablename__ = 'favorites'
+    id = db.Column(db.Integer, primary_key=True)
+    name = db.Column(db.String(64))
+    desc = db.Column(db.Text())
+    user_id = db.Column(db.Integer, db.ForeignKey('users.id'))
+    user = db.relationship('User')
+
+
 class UserLikePost(db.Model):
     __tablename__ = 'user_like_post'
     id = db.Column(db.Integer, primary_key=True)
@@ -462,6 +471,18 @@ class UserLikePost(db.Model):
     user = db.relationship('User')
     post_id = db.Column(db.Integer, db.ForeignKey('posts.id'))
     post = db.relationship('Post')
+    create_time = db.Column(db.DateTime(), default=datetime.utcnow)
+
+
+class UserCollectPost(db.Model):
+    __tablename__ = 'user_collect_post'
+    id = db.Column(db.Integer, primary_key=True)
+    user_id = db.Column(db.Integer, db.ForeignKey('users.id'))
+    user = db.relationship('User')
+    post_id = db.Column(db.Integer, db.ForeignKey('posts.id'))
+    post = db.relationship('Post')
+    favorite_id = db.Column(db.Integer, db.ForeignKey('favorites.id'))
+    favorite = db.relationship('Favorite')
     create_time = db.Column(db.DateTime(), default=datetime.utcnow)
 
 
