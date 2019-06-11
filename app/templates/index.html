@@ -5,8 +5,8 @@
 <div class="ui segment">
 <div class="ui secondary pointing menu">
     <a class="item active" id="allPosts">All</a>
-    <a class="item" id="userFollowers">Following</a>
-    <a class="item" id="userFollowing">Hot</a>
+    <a class="item" id="followingPosts">Following</a>
+    <a class="item" id="hotPosts">Hot</a>
     <div class="right item">
     <div class="ui pointing dropdown">
         <span>More</span>
@@ -27,7 +27,12 @@
 {% block script %}
 {{super()}}
 <script>
-$(document).ready()
+let all_posts = document.getElementById('allPosts')
+let following_posts = document.getElementById('followingPosts')
+let hot_posts = document.getElementById('hotPosts')
+all_posts.addEventListener('click', initFeedPosts)
+following_posts.addEventListener('click', initFollowingPosts)
+hot_posts.addEventListener('click', initHotPosts)
 document.addEventListener('DOMContentLoaded', initFeedPosts)
 window.addEventListener('scroll', _.throttle(getFeedPosts, 200))
 </script>

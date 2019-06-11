@@ -9,9 +9,6 @@ from .errors import forbidden
 
 class PostAPI(MethodView):
 
-    # login required permission write required
-    decorators = []
-
     def get(self, post_id):
         if post_id is not None:
             post = Post.query.get_or_404(post_id)
@@ -60,17 +57,24 @@ class PostAPI(MethodView):
 
 class PostCommentAPI(MethodView):
 
-    decorators = []
+    def get(self, post_id):
+        post = Post.query.get_or_404(post_id)
+
+
+class UserFollowingPostAPI(MethodView):
 
     def get(self):
-        # show post's comments
         pass
 
 
 class UserLikePostAPI(MethodView):
 
-    decorators = []
-
     def get(self):
         # show user like post
+        pass
+
+
+class HotPostAPI(MethodView):
+
+    def get(self):
         pass

@@ -11,7 +11,7 @@ def add(x, y):
     return x + y
 
 
-@shared_task(serializer='pickle')
+@celery_app.task(serializer='pickle')
 def send_async_email(msg):
     mail.send(msg)
 

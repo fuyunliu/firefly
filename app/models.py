@@ -4,8 +4,8 @@ import hashlib
 from datetime import datetime
 from itsdangerous import TimedJSONWebSignatureSerializer as Serializer
 from werkzeug.security import generate_password_hash, check_password_hash
-from flask import current_app, url_for
-from flask_login import UserMixin, AnonymousUserMixin
+from flask import current_app, url_for, g
+from flask_login import UserMixin, AnonymousUserMixin, current_user
 from . import db, login_manager, timesince
 
 
@@ -173,7 +173,8 @@ class User(UserMixin, db.Model):
         s = Serializer(current_app.config['SECRET_KEY'])
         try:
             data = s.loads(token.encode('utf-8'))
-        except:
+        except Exception as e:
+            print(e)
             return False
 
         if data.get('confirm') != self.id:
@@ -191,7 +192,8 @@ class User(UserMixin, db.Model):
         s = Serializer(current_app.config['SECRET_KEY'])
         try:
             data = s.loads(token.encode('utf-8'))
-        except:
+        except Exception as e:
+            print(e)
             return False
         user = User.query.get(data.get('reset'))
         if user is None:
@@ -210,7 +212,8 @@ class User(UserMixin, db.Model):
         s = Serializer(current_app.config['SECRET_KEY'])
         try:
             data = s.loads(token.encode('utf-8'))
-        except:
+        except Exception as e:
+            print(e)
             return False
         if data.get('change_email') != self.id:
             return False
@@ -272,47 +275,50 @@ class User(UserMixin, db.Model):
 
     def like_post(self, post):
         if not self.is_like_post(post):
-            l = UserLikePost(user=self, post=post)
+            lp = UserLikePost(user=self, post=post)
             post.like_count += 1
-            db.session.add(l)
+            db.session.add(lp)
             db.session.add(post)
 
     def dislike_post(self, post):
-        l = UserLikePost.query.filter_by(user_id=self.id,
-                                         post_id=post.id).first()
-        if l is not None:
+        lp = UserLikePost.query.filter_by(user_id=self.id,
+                                          post_id=post.id).first()
+        if lp is not None:
             post.like_count -= 1
-            db.session.delete(l)
+            db.session.delete(lp)
             db.session.add(post)
 
     def is_like_post(self, post):
         if post.id is None:
             return False
-        l = UserLikePost.query.filter_by(user_id=self.id,
-                                         post_id=post.id).first()
-        return l is not None
+        lp = UserLikePost.query.filter_by(user_id=self.id,
+                                          post_id=post.id).first()
+        return lp is not None
+
+    def is_collect_post(self, post):
+        return True
 
     def like_comment(self, comment):
         if not self.is_like_comment(comment):
-            l = UserLikeComment(user=self, comment=comment)
+            lc = UserLikeComment(user=self, comment=comment)
             comment.like_count += 1
-            db.session.add(l)
+            db.session.add(lc)
             db.session.add(comment)
 
     def dislike_comment(self, comment):
-        l = UserLikeComment.query.filter_by(user_id=self.id,
-                                            comment_id=comment.id).first()
-        if l is not None:
+        lc = UserLikeComment.query.filter_by(user_id=self.id,
+                                             comment_id=comment.id).first()
+        if lc is not None:
             comment.like_count -= 1
-            db.session.delete(l)
+            db.session.delete(lc)
             db.session.add(comment)
 
     def is_like_comment(self, comment):
         if comment.id is None:
             return False
-        l = UserLikeComment.query.filter_by(user_id=self.id,
-                                            comment_id=comment.id).first()
-        return l is not None
+        lc = UserLikeComment.query.filter_by(user_id=self.id,
+                                             comment_id=comment.id).first()
+        return lc is not None
 
     def generate_auth_token(self, expiration=3600):
         s = Serializer(current_app.config['SECRET_KEY'], expiration)
@@ -376,6 +382,13 @@ def load_user(user_id):
     return User.query.get(int(user_id))
 
 
+def get_current_user():
+    user = getattr(g, 'current_user', None) or current_user
+    if isinstance(user, AnonymousUser):
+        return None
+    return user
+
+
 class Post(db.Model):
     __tablename__ = 'posts'
 
@@ -417,6 +430,14 @@ class Post(db.Model):
             'like_count': self.like_count,
             'url': url_for('api.post_api', post_id=self.id, _external=True)
         }
+        user = get_current_user()
+        if user is not None:
+            data['heart_css'] = 'heart'
+            data['star_css'] = 'star'
+            if user.is_like_post(self):
+                data['heart_css'] = 'red heart'
+            if user.is_collect_post(self):
+                data['star_css'] = 'yellow star'
         return data
 
     @staticmethod

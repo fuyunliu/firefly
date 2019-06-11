@@ -108,9 +108,6 @@ function initFeedPosts() {
     )
 }
 
-let all_posts = document.getElementById('allPosts')
-all_posts.addEventListener('click', initFeedPosts)
-
 function getFeedPosts() {
     const down = window.pageYOffset + window.innerHeight >= document.documentElement.scrollHeight
     if (!down) {return}
@@ -127,6 +124,15 @@ function getFeedPosts() {
     )
 }
 
+function initFollowingPosts() {
+
+}
+
+function initHotPosts() {
+
+}
+
+
 let createPostCard = (post) => `
 <div class="ui fluid card noBorderCard">
   <div class="content">
@@ -138,22 +144,18 @@ let createPostCard = (post) => `
     </div>
   </div>
   <div class="extra content">
-    <span class="left floated like">
-        <i class="like icon"></i>
-        ${post.like_count} Likes
+    <span class="left floated">
+      <i class="${post.heart_css} link icon"></i>
+      ${post.like_count} Likes
     </span>
-    <span class="right floated star">
-      <i class="star icon"></i>
+    <span class="right floated">
+      <i class="${post.star_css} icon"></i>
       Favorites
     </span>
   </div>
 </div>
 <div class="ui divider"></div>
 `
-
-
-
-
 
 $(document).ready(function () {
     closeMessage()

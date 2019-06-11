@@ -1,7 +1,7 @@
 # -*- coding: utf-8 -*-
 
 import json
-from flask import Blueprint, g, jsonify, request
+from flask import Blueprint, g, jsonify
 from flask_httpauth import HTTPTokenAuth
 from .users import UserAPI
 from .posts import PostAPI
