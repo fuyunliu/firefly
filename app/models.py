@@ -451,6 +451,16 @@ class Post(db.Model):
         return f'<Post {self.id}>'
 
 
+class Mind(db.Model):
+    __tablename__ = 'minds'
+
+    id = db.Column(db.Integer, primary_key=True)
+    body = db.Column(db.Text)
+    body_html = db.Column(db.Text)
+    author_id = db.Column(db.Integer, db.ForeignKey('users.id'))
+    create_time = db.Column(db.DateTime(), index=True, default=datetime.utcnow)
+
+
 class Comment(db.Model):
     __tablename__ = 'comments'
 
