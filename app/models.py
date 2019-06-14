@@ -19,11 +19,14 @@ class Permission:
 
 class Role(db.Model):
     __tablename__ = 'roles'
+
     id = db.Column(db.Integer, primary_key=True)
     name = db.Column(db.String(64), unique=True)
     default = db.Column(db.Boolean, default=False, index=True)
     permissions = db.Column(db.Integer)
-    users = db.relationship('User', backref='role', lazy='dynamic')
+    users = db.relationship('User',
+                            backref=db.backref('role', lazy='joined'),
+                            lazy='dynamic')
 
     def __init__(self, **kwargs):
         super().__init__(**kwargs)
@@ -72,6 +75,7 @@ class Role(db.Model):
 
 class Follow(db.Model):
     __tablename__ = 'me_follow_you'
+
     me_id = db.Column(db.Integer, db.ForeignKey('users.id'), primary_key=True)
     me = db.relationship('User', foreign_keys=[me_id])
     you_id = db.Column(db.Integer, db.ForeignKey('users.id'), primary_key=True)
@@ -106,9 +110,15 @@ class User(UserMixin, db.Model):
 
     # 我的文章
     posts = db.relationship('Post',
-                            backref='author',
+                            backref=db.backref('author', lazy='joined'),
                             lazy='dynamic',
                             cascade='all, delete-orphan')
+
+    # 我的推特
+    tweets = db.relationship('Tweet',
+                             backref=db.backref('author', lazy='joined'),
+                             lazy='dynamic',
+                             cascade='all, delete-orphan')
 
     # 我的评论
     comments = db.relationship('Comment',
@@ -122,10 +132,26 @@ class User(UserMixin, db.Model):
                                   secondary='user_like_post',
                                   lazy='dynamic')
 
+    # 我喜欢的推特
+    liked_tweets = db.relationship('Tweet',
+                                   secondary='user_like_tweet',
+                                   lazy='dynamic')
+
     # 我喜欢的评论
     liked_comments = db.relationship('Comment',
                                      secondary='user_like_comment',
                                      lazy='dynamic')
+
+    # 我收藏的文章
+    collected_posts = db.relationship('Post',
+                                      secondary='user_collect_post',
+                                      lazy='dynamic')
+
+    # 我的收藏夹
+    favorites = db.relationship('Favorite',
+                                backref=db.backref('user', lazy='joined'),
+                                lazy='dynamic',
+                                cascade='all, delete-orphan')
 
     @staticmethod
     def add_self_follows():
@@ -272,17 +298,13 @@ class User(UserMixin, db.Model):
     def like_post(self, post):
         if not self.is_like_post(post):
             lp = UserLikePost(user=self, post=post)
-            post.like_count += 1
             db.session.add(lp)
-            db.session.add(post)
 
     def dislike_post(self, post):
         lp = UserLikePost.query.filter_by(user_id=self.id,
                                           post_id=post.id).first()
         if lp is not None:
-            post.like_count -= 1
             db.session.delete(lp)
-            db.session.add(post)
 
     def is_like_post(self, post):
         if post.id is None:
@@ -291,8 +313,41 @@ class User(UserMixin, db.Model):
                                           post_id=post.id).first()
         return lp is not None
 
+    def collect_post(self, post):
+        if not self.is_collect_post(post):
+            cp = UserCollectPost(user=self, post=post)
+            db.session.add(cp)
+
+    def discollect_post(self, post):
+        cp = UserCollectPost.query.filter_by(user_id=self.id,
+                                             post_id=post.id).first()
+        if cp is not None:
+            db.session.delete(cp)
+
     def is_collect_post(self, post):
-        return True
+        if post.id is None:
+            return False
+        cp = UserCollectPost.query.filter_by(user_id=self.id,
+                                             post_id=post.id).first()
+        return cp is not None
+
+    def like_tweet(self, tweet):
+        if not self.is_like_tweet(tweet):
+            lt = UserLikeTweet(user=self, tweet=tweet)
+            db.session.add(lt)
+
+    def dislike_tweet(self, tweet):
+        lt = UserLikeTweet.query.filter_by(user_id=self.id,
+                                           tweet_id=tweet.id).first()
+        if lt is not None:
+            db.session.delete(lt)
+
+    def is_like_tweet(self, tweet):
+        if tweet.id is None:
+            return False
+        lt = UserLikeTweet.query.filter_by(user_id=self.id,
+                                           tweet_id=tweet.id).first()
+        return lt is not None
 
     def like_comment(self, comment):
         if not self.is_like_comment(comment):
@@ -343,6 +398,7 @@ class User(UserMixin, db.Model):
             'id': self.id,
             'email': self.email,
             'username': self.username,
+            'avatar': self.gravatar(size=18),
             'member_since': self.member_since.year,
             'last_seen': timesince(self.last_seen),
             'url': url_for('api.user_api', user_id=self.id, _external=True)
@@ -385,6 +441,10 @@ def get_current_user():
     return user
 
 
+def query_count(q):
+    return q.with_entities(db.func.count()).scalar()
+
+
 def null_or_empty(s):
     if s is None or s.strip() == '':
         return True
@@ -404,7 +464,10 @@ class Post(db.Model):
                             onupdate=datetime.utcnow)
 
     # 文章的评论
-    comments = db.relationship('Comment', backref='post', lazy='dynamic')
+    comments = db.relationship('Comment',
+                               backref=db.backref('post', lazy='joined'),
+                               lazy='dynamic',
+                               cascade='all, delete-orphan')
 
     # 喜欢文章的人
     liked_users = db.relationship('User',
@@ -424,14 +487,11 @@ class Post(db.Model):
             'body_html': self.body_html,
             'create_time': timesince(self.create_time),
             'update_time': timesince(self.update_time),
-            'like_count': self.liked_users.count(),
-            'collect_count': self.collected_users.count(),
-            'comment_count': self.comments.count(),
+            'like_count': query_count(self.liked_users),
+            'collect_count': query_count(self.collected_users),
+            'comment_count': query_count(self.comments),
             'url': url_for('api.post_api', post_id=self.id, _external=True),
-            'author': {
-                'id': self.author_id,
-                'username': self.author.username
-            }
+            'author': self.author.dumps()
         }
         user = get_current_user()
         if user is not None:
@@ -455,6 +515,56 @@ class Post(db.Model):
         return f'<Post {self.id}>'
 
 
+class Tweet(db.Model):
+    __tablename__ = 'tweets'
+
+    id = db.Column(db.Integer, primary_key=True)
+    body = db.Column(db.Text)
+    body_html = db.Column(db.Text)
+    author_id = db.Column(db.Integer, db.ForeignKey('users.id'))
+    create_time = db.Column(db.DateTime(), index=True, default=datetime.utcnow)
+
+    # 推特的评论
+    comments = db.relationship('Comment',
+                               backref=db.backref('tweet', lazy='joined'),
+                               lazy='dynamic',
+                               cascade='all, delete-orphan')
+
+    # 喜欢推特的人
+    liked_users = db.relationship('User',
+                                  secondary='user_like_tweet',
+                                  lazy='dynamic')
+
+    def dumps(self):
+        data = {
+            'id': self.id,
+            'body': self.body,
+            'body_html': self.body_html,
+            'create_time': timesince(self.create_time),
+            'like_count': query_count(self.liked_users),
+            'comment_count': query_count(self.comments),
+            'url': url_for('api.tweet_api', tweet_id=self.id, _external=True),
+            'author': self.author.dumps()
+        }
+        user = get_current_user()
+        if user is not None:
+            css = {'heart': 'heart'}
+            if user.is_like_tweet(self):
+                css['heart'] = 'red heart'
+            data['css'] = css
+        return data
+
+    @staticmethod
+    def loads(data):
+        body = data.get('body')
+        if null_or_empty(body):
+            raise ValueError('tweet does not have a body')
+        return Tweet(body=body)
+
+    def __repr__(self):
+        return f'<Tweet {self.id}>'
+
+
 class Comment(db.Model):
     __tablename__ = 'comments'
 
@@ -462,16 +572,17 @@ class Comment(db.Model):
     body = db.Column(db.Text)
     body_html = db.Column(db.Text)
     post_id = db.Column(db.Integer, db.ForeignKey('posts.id'))
+    tweet_id = db.Column(db.Integer, db.ForeignKey('tweets.id'))
     author_id = db.Column(db.Integer, db.ForeignKey('users.id'))
     parent_id = db.Column(db.Integer, db.ForeignKey('comments.id'))
     create_time = db.Column(db.DateTime(), index=True, default=datetime.utcnow)
-
-    # 子评论
-    children = db.relationship('Comment',
-                               foreign_keys='Comment.author_id',
-                               backref=db.backref('author', lazy='joined'),
-                               lazy='dynamic',
-                               cascade='all, delete-orphan')
+    parent = db.relationship('Comment',
+                             remote_side=[id],
+                             backref=db.backref(
+                                 'children',
+                                 lazy='dynamic',
+                                 cascade='all, delete-orphan'),
+                             lazy='joined')
 
     # 喜欢评论的人
     liked_users = db.relationship('User',
@@ -484,22 +595,17 @@ class Comment(db.Model):
             'body': self.body,
             'body_html': self.body_html,
             'create_time': timesince(self.create_time),
-            'like_count': self.liked_users.count(),
-            'comment_count': self.replies.count(),
+            'like_count': query_count(self.liked_users),
+            'comment_count': query_count(self.children),
             'url': url_for('api.comment_api',
                            comment_id=self.id,
                            _external=True),
-            'author': {
-                'id': self.author_id,
-                'username': self.author.username,
-                'avatar': self.author.gravatar(size=18)
-            }
+            'author': self.author.dumps()
         }
-        if self.reply is not None:
-            data['reply'] = {
-                'id': self.reply_id,
-                'username': self.reply.username,
-                'avatar': self.reply.gravatar(size=18)
+        if self.parent is not None:
+            data['parent'] = {
+                'id': self.parent_id,
+                'author': self.parent.author.dumps(),
             }
         return data
 
@@ -522,15 +628,16 @@ class Comment(db.Model):
 
 class Favorite(db.Model):
     __tablename__ = 'favorites'
+
     id = db.Column(db.Integer, primary_key=True)
     name = db.Column(db.String(64))
     desc = db.Column(db.Text())
     user_id = db.Column(db.Integer, db.ForeignKey('users.id'))
-    user = db.relationship('User')
 
 
 class UserLikePost(db.Model):
     __tablename__ = 'user_like_post'
+
     id = db.Column(db.Integer, primary_key=True)
     user_id = db.Column(db.Integer, db.ForeignKey('users.id'))
     user = db.relationship('User')
@@ -541,6 +648,7 @@ class UserLikePost(db.Model):
 
 class UserCollectPost(db.Model):
     __tablename__ = 'user_collect_post'
+
     id = db.Column(db.Integer, primary_key=True)
     user_id = db.Column(db.Integer, db.ForeignKey('users.id'))
     user = db.relationship('User')
@@ -553,9 +661,40 @@ class UserCollectPost(db.Model):
 
 class UserLikeComment(db.Model):
     __tablename__ = 'user_like_comment'
+
     id = db.Column(db.Integer, primary_key=True)
     user_id = db.Column(db.Integer, db.ForeignKey('users.id'))
     user = db.relationship('User')
     comment_id = db.Column(db.Integer, db.ForeignKey('comments.id'))
     comment = db.relationship('Comment')
+    create_time = db.Column(db.DateTime(), default=datetime.utcnow)
+
+
+class UserLikeTweet(db.Model):
+    __tablename__ = 'user_like_tweet'
+
+    id = db.Column(db.Integer, primary_key=True)
+    user_id = db.Column(db.Integer, db.ForeignKey('users.id'))
+    user = db.relationship('User')
+    tweet_id = db.Column(db.Integer, db.ForeignKey('tweets.id'))
+    tweet = db.relationship('Tweet')
+    create_time = db.Column(db.DateTime(), default=datetime.utcnow)
+
+
+class Topic(db.Model):
+    __tablename__ = 'topics'
+
+    id = db.Column(db.Integer, primary_key=True)
+    name = db.Column(db.String(64))
+    desc = db.Column(db.Text())
+
+
+class Message(db.Model):
+    __tablename__ = 'messages'
+
+    id = db.Column(db.Integer, primary_key=True)
+    body = db.Column(db.Text())
+    user_id = db.Column(db.Integer, db.ForeignKey('users.id'))
+    is_read = db.Column(db.Boolean, default=False)
+    sender = db.Column(db.String(64), default='system')
     create_time = db.Column(db.DateTime(), default=datetime.utcnow)

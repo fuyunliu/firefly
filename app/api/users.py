@@ -60,7 +60,6 @@ class UserAPI(MethodView):
         user = User.query.get_or_404(user_id)
         db.session.delete(user)
         db.session.commit()
-        return 'ok'
 
 
 class UserLikeAPI(MethodView):
@@ -78,4 +77,3 @@ class UserCollectAPI(MethodView):
     def get(self, user_id):
         # show user collect posts
         pass
-
