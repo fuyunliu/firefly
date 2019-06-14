@@ -195,7 +195,7 @@ class User(UserMixin, db.Model):
         except Exception as e:
             print(e)
             return False
-        user = User.query.get(data.get('reset'))
+        user = User.query.get(data['reset'])
         if user is None:
             return False
         user.password = new_password
@@ -335,7 +335,7 @@ class User(UserMixin, db.Model):
         s = Serializer(current_app.config['SECRET_KEY'])
         try:
             data = s.loads(token.encode('utf-8'))
-            user = User.query.get(data.get('id'))
+            user = User.query.get(data['id'])
             assert data.get('timestamp') == user.token_timestamp
             return user
         except Exception as e:
@@ -389,6 +389,11 @@ def get_current_user():
     return user
 
 
+def null_or_empty(s):
+    if s is None or s.strip() == '':
+        return True
+
+
 class Post(db.Model):
     __tablename__ = 'posts'
 
@@ -397,8 +402,6 @@ class Post(db.Model):
     body = db.Column(db.Text)
     body_html = db.Column(db.Text)
     author_id = db.Column(db.Integer, db.ForeignKey('users.id'))
-    author_name = db.Column(db.String(64))
-    like_count = db.Column(db.Integer)
     create_time = db.Column(db.DateTime(), index=True, default=datetime.utcnow)
     update_time = db.Column(db.DateTime(),
                             default=datetime.utcnow,
@@ -412,10 +415,10 @@ class Post(db.Model):
                                   secondary='user_like_post',
                                   lazy='dynamic')
 
-    def __init__(self, **kwargs):
-        super().__init__(**kwargs)
-        if self.like_count is None:
-            self.like_count = 0
+    # 收藏文章的人
+    collected_users = db.relationship('User',
+                                      secondary='user_collect_post',
+                                      lazy='dynamic')
 
     def dumps(self):
         data = {
@@ -425,27 +428,32 @@ class Post(db.Model):
             'body_html': self.body_html,
             'create_time': timesince(self.create_time),
             'update_time': timesince(self.update_time),
-            'author_id': self.author_id,
-            'author_name': self.author_name,
-            'like_count': self.like_count,
-            'url': url_for('api.post_api', post_id=self.id, _external=True)
+            'like_count': self.liked_users.count(),
+            'collect_count': self.collected_users.count(),
+            'comment_count': self.comments.count(),
+            'url': url_for('api.post_api', post_id=self.id, _external=True),
+            'author': {
+                'id': self.author_id,
+                'username': self.author.username
+            }
         }
         user = get_current_user()
         if user is not None:
-            data['heart_css'] = 'heart'
-            data['star_css'] = 'star'
+            css = {'heart': 'heart', 'star': 'star'}
             if user.is_like_post(self):
-                data['heart_css'] = 'red heart'
+                css['heart'] = 'red heart'
             if user.is_collect_post(self):
-                data['star_css'] = 'yellow star'
+                css['star'] = 'yellow star'
+            data['css'] = css
         return data
 
     @staticmethod
     def loads(data):
-        return Post(
-            title=data['title'],
-            body=data['body']
-        )
+        title = data.get('title')
+        body = data.get('body')
+        if any(map(null_or_empty, (title, body))):
+            raise ValueError('post does not have a title or body')
+        return Post(title=title, body=body)
 
     def __repr__(self):
         return f'<Post {self.id}>'
@@ -456,10 +464,10 @@ class Comment(db.Model):
 
     id = db.Column(db.Integer, primary_key=True)
     body = db.Column(db.Text)
+    body_html = db.Column(db.Text)
     post_id = db.Column(db.Integer, db.ForeignKey('posts.id'))
     author_id = db.Column(db.Integer, db.ForeignKey('users.id'))
     reply_id = db.Column(db.Integer, db.ForeignKey('users.id'))
-    like_count = db.Column(db.Integer)
     create_time = db.Column(db.DateTime(), index=True, default=datetime.utcnow)
 
     # 喜欢评论的人
@@ -467,10 +475,43 @@ class Comment(db.Model):
                                   secondary='user_like_comment',
                                   lazy='dynamic')
 
-    def __init__(self, **kwargs):
-        super().__init__(**kwargs)
-        if self.like_count is None:
-            self.like_count = 0
+    def dumps(self):
+        data = {
+            'id': self.id,
+            'body': self.body,
+            'body_html': self.body_html,
+            'create_time': timesince(self.create_time),
+            'like_count': self.liked_users.count(),
+            'comment_count': self.replies.count(),
+            'url': url_for('api.comment_api',
+                           comment_id=self.id,
+                           _external=True),
+            'author': {
+                'id': self.author_id,
+                'username': self.author.username,
+                'avatar': self.author.gravatar(size=18)
+            }
+        }
+        if self.reply is not None:
+            data['reply'] = {
+                'id': self.reply_id,
+                'username': self.reply.username,
+                'avatar': self.reply.gravatar(size=18)
+            }
+        return data
+
+    @staticmethod
+    def loads(data):
+        body = data.get('body')
+        reply_id = data.get('reply_id')
+        if null_or_empty(body):
+            raise ValueError('comment does not have a body')
+        comment = Comment(body=body)
+        if reply_id is not None:
+            reply = User.query.get(int(reply_id))
+            if reply is not None:
+                comment.reply = reply
+        return comment
 
     def __repr__(self):
         return f'<Comment {self.id}>'

@@ -23,3 +23,8 @@ def send_email(to, subject, template, **kwargs):
     msg.body = render_template(template + '.txt', **kwargs)
     msg.html = render_template(template + '.html', **kwargs)
     send_async_email.delay(msg)
+
+
+@celery_app.task
+def delete_account(user_id):
+    pass

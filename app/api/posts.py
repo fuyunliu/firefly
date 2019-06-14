@@ -89,8 +89,7 @@ class PostCommentAPI(MethodView):
         post = Post.query.get_or_404(post_id)
         comment = Comment.loads(request.json)
         comment.post = post
-        comment.author = author
-        comment.reply = reply
+        comment.author = g.current_user
         db.session.add(comment)
         db.session.commit()
 
