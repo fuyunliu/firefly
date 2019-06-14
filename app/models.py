@@ -105,7 +105,10 @@ class User(UserMixin, db.Model):
                             lazy='dynamic')
 
     # 我的文章
-    posts = db.relationship('Post', backref='author', lazy='dynamic')
+    posts = db.relationship('Post',
+                            backref='author',
+                            lazy='dynamic',
+                            cascade='all, delete-orphan')
 
     # 我的评论
     comments = db.relationship('Comment',
@@ -113,13 +116,6 @@ class User(UserMixin, db.Model):
                                backref=db.backref('author', lazy='joined'),
                                lazy='dynamic',
                                cascade='all, delete-orphan')
-
-    # 我收到的回复
-    replies = db.relationship('Comment',
-                              foreign_keys='Comment.reply_id',
-                              backref=db.backref('reply', lazy='joined'),
-                              lazy='dynamic',
-                              cascade='all, delete-orphan')
 
     # 我喜欢的文章
     liked_posts = db.relationship('Post',
@@ -467,8 +463,15 @@ class Comment(db.Model):
     body_html = db.Column(db.Text)
     post_id = db.Column(db.Integer, db.ForeignKey('posts.id'))
     author_id = db.Column(db.Integer, db.ForeignKey('users.id'))
-    reply_id = db.Column(db.Integer, db.ForeignKey('users.id'))
+    parent_id = db.Column(db.Integer, db.ForeignKey('comments.id'))
     create_time = db.Column(db.DateTime(), index=True, default=datetime.utcnow)
+
+    # 子评论
+    children = db.relationship('Comment',
+                               foreign_keys='Comment.author_id',
+                               backref=db.backref('author', lazy='joined'),
+                               lazy='dynamic',
+                               cascade='all, delete-orphan')
 
     # 喜欢评论的人
     liked_users = db.relationship('User',
