@@ -94,6 +94,14 @@ class PostCommentAPI(MethodView):
         db.session.commit()
 
 
+class PostLikeAPI(MethodView):
+    """
+    https://127.0.0.1:5000/api/posts/1/likes
+    POST  user like a post
+    DELETE user dislike a post
+    """
+
+
 class PostCollectAPI(MethodView):
 
     """
@@ -101,13 +109,3 @@ class PostCollectAPI(MethodView):
     POST  user collect a post
     DELETE user discollect a post
     """
-
-    def get(self):
-        # show user like post
-        pass
-
-
-class HotPostAPI(MethodView):
-
-    def get(self):
-        pass

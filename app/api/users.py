@@ -4,7 +4,7 @@ from flask import g, request, jsonify, current_app, url_for
 from flask.views import MethodView
 from .. import db
 from ..models import User, Permission
-from ..email import send_email
+from ..tasks import send_email, delete_account
 from .errors import forbidden
 
 
@@ -57,17 +57,171 @@ class UserAPI(MethodView):
 
     def delete(self, user_id):
         # 删除用户，设置 7 天期限，放 celery 删除，发送邮件
+        delete_account.delay(user_id)
+
+
+class UserPostAPI(MethodView):
+    """
+    https://127.0.0.1:5000/api/users/1/posts
+    """
+    def get(self, user_id):
         user = User.query.get_or_404(user_id)
-        db.session.delete(user)
-        db.session.commit()
+        page = request.args.get('page', 1, type=int)
+        pagination = user.posts.paginate(
+            page,
+            per_page=current_app.config['FIREFLY_PER_PAGE_SIZE'],
+            error_out=False)
+        prev = None
+        if pagination.has_prev:
+            prev = url_for('api.user_post',
+                           user_id=user_id,
+                           page=page - 1,
+                           _external=True)
+        next = None
+        if pagination.has_next:
+            next = url_for('api.user_post',
+                           user_id=user_id,
+                           page=page + 1,
+                           _external=True)
+        return jsonify({
+            'data': [p.dumps() for p in pagination.items],
+            'prev': prev,
+            'next': next,
+            'count': pagination.total
+        })
+
+
+class UserTweetAPI(MethodView):
+    """
+    https://127.0.0.1:5000/api/users/1/tweets
+    """
+    def get(self, user_id):
+        user = User.query.get_or_404(user_id)
+        page = request.args.get('page', 1, type=int)
+        pagination = user.tweets.paginate(
+            page,
+            per_page=current_app.config['FIREFLY_PER_PAGE_SIZE'],
+            error_out=False)
+        prev = None
+        if pagination.has_prev:
+            prev = url_for('api.user_tweet',
+                           user_id=user_id,
+                           page=page - 1,
+                           _external=True)
+        next = None
+        if pagination.has_next:
+            next = url_for('api.user_tweet',
+                           user_id=user_id,
+                           page=page + 1,
+                           _external=True)
+        return jsonify({
+            'data': [p.dumps() for p in pagination.items],
+            'prev': prev,
+            'next': next,
+            'count': pagination.total
+        })
+
+
+class UserCommentAPI(MethodView):
+    """
+    https://127.0.0.1:5000/api/users/1/comments
+    """
+    def get(self, user_id):
+        user = User.query.get_or_404(user_id)
+        page = request.args.get('page', 1, type=int)
+        pagination = user.comments.paginate(
+            page,
+            per_page=current_app.config['FIREFLY_PER_PAGE_SIZE'],
+            error_out=False)
+        prev = None
+        if pagination.has_prev:
+            prev = url_for('api.user_comment',
+                           user_id=user_id,
+                           page=page - 1,
+                           _external=True)
+        next = None
+        if pagination.has_next:
+            next = url_for('api.user_comment',
+                           user_id=user_id,
+                           page=page + 1,
+                           _external=True)
+        return jsonify({
+            'data': [p.dumps() for p in pagination.items],
+            'prev': prev,
+            'next': next,
+            'count': pagination.total
+        })
+
+
+class UserFavorite(MethodView):
+    """
+    https://127.0.0.1:5000/api/users/1/favorites
+    """
+    def get(self, user_id):
+        user = User.query.get_or_404(user_id)
+        page = request.args.get('page', 1, type=int)
+        pagination = user.favorites.paginate(
+            page,
+            per_page=current_app.config['FIREFLY_PER_PAGE_SIZE'],
+            error_out=False)
+        prev = None
+        if pagination.has_prev:
+            prev = url_for('api.user_comment',
+                           user_id=user_id,
+                           page=page - 1,
+                           _external=True)
+        next = None
+        if pagination.has_next:
+            next = url_for('api.user_comment',
+                           user_id=user_id,
+                           page=page + 1,
+                           _external=True)
+        return jsonify({
+            'data': [p.dumps() for p in pagination.items],
+            'prev': prev,
+            'next': next,
+            'count': pagination.total
+        })
 
 
 class UserLikeAPI(MethodView):
     """
     https://127.0.0.1:5000/api/users/1/likes
+    喜欢的文章post，喜欢的推特tweet，喜欢的评论comment
     """
     def get(self, user_id):
         user = User.query.get_or_404(user_id)
+        type = request.args.get('type', 'post', type=str)
+        page = request.args.get('page', 1, type=int)
+        bq = {
+            'post': user.liked_posts,
+            'tweet': user.liked_tweets,
+            'comment': user.liked_comments
+        }
+        pagination = bq[type].paginate(
+            page,
+            per_page=current_app.config['FIREFLY_PER_PAGE_SIZE'],
+            error_out=False)
+        prev = None
+        if pagination.has_prev:
+            prev = url_for('api.user_like',
+                           user_id=user_id,
+                           type=type,
+                           page=page - 1,
+                           _external=True)
+        next = None
+        if pagination.has_next:
+            next = url_for('api.user_like',
+                           user_id=user_id,
+                           type=type,
+                           page=page + 1,
+                           _external=True)
+        return jsonify({
+            'data': [p.dumps() for p in pagination.items],
+            'prev': prev,
+            'next': next,
+            'count': pagination.total
+        })
 
 
 class UserCollectAPI(MethodView):
@@ -75,5 +229,27 @@ class UserCollectAPI(MethodView):
     https://127.0.0.1:5000/api/users/1/collects
     """
     def get(self, user_id):
-        # show user collect posts
-        pass
+        user = User.query.get_or_404(user_id)
+        page = request.args.get('page', 1, type=int)
+        pagination = user.collected_posts.paginate(
+            page,
+            per_page=current_app.config['FIREFLY_PER_PAGE_SIZE'],
+            error_out=False)
+        prev = None
+        if pagination.has_prev:
+            prev = url_for('api.user_collect',
+                           user_id=user_id,
+                           page=page - 1,
+                           _external=True)
+        next = None
+        if pagination.has_next:
+            next = url_for('api.user_collect',
+                           user_id=user_id,
+                           page=page + 1,
+                           _external=True)
+        return jsonify({
+            'data': [p.dumps() for p in pagination.items],
+            'prev': prev,
+            'next': next,
+            'count': pagination.total
+        })

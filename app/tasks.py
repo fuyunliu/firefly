@@ -2,13 +2,8 @@
 
 from flask import current_app, render_template
 from flask_mail import Message
-from celery import shared_task
-from . import mail, celery_app
-
-
-@shared_task
-def add(x, y):
-    return x + y
+from . import mail, celery_app, db
+from .models import User
 
 
 @celery_app.task(serializer='pickle')
@@ -27,4 +22,6 @@ def send_email(to, subject, template, **kwargs):
 
 @celery_app.task
 def delete_account(user_id):
-    pass
+    user = User.query.get(int(user_id))
+    db.session.delete(user)
+    db.session.commit()
