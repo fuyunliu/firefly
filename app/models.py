@@ -638,10 +638,11 @@ class Favorite(db.Model):
 class UserLikePost(db.Model):
     __tablename__ = 'user_like_post'
 
-    id = db.Column(db.Integer, primary_key=True)
-    user_id = db.Column(db.Integer, db.ForeignKey('users.id'))
+    user_id = db.Column(db.Integer, db.ForeignKey('users.id'),
+                        primary_key=True)
     user = db.relationship('User')
-    post_id = db.Column(db.Integer, db.ForeignKey('posts.id'))
+    post_id = db.Column(db.Integer, db.ForeignKey('posts.id'),
+                        primary_key=True)
     post = db.relationship('Post')
     create_time = db.Column(db.DateTime(), default=datetime.utcnow)
 
@@ -649,12 +650,14 @@ class UserLikePost(db.Model):
 class UserCollectPost(db.Model):
     __tablename__ = 'user_collect_post'
 
-    id = db.Column(db.Integer, primary_key=True)
-    user_id = db.Column(db.Integer, db.ForeignKey('users.id'))
+    user_id = db.Column(db.Integer, db.ForeignKey('users.id'),
+                        primary_key=True)
     user = db.relationship('User')
-    post_id = db.Column(db.Integer, db.ForeignKey('posts.id'))
+    post_id = db.Column(db.Integer, db.ForeignKey('posts.id'),
+                        primary_key=True)
     post = db.relationship('Post')
-    favorite_id = db.Column(db.Integer, db.ForeignKey('favorites.id'))
+    favorite_id = db.Column(db.Integer, db.ForeignKey('favorites.id'),
+                            primary_key=True)
     favorite = db.relationship('Favorite')
     create_time = db.Column(db.DateTime(), default=datetime.utcnow)
 
@@ -662,10 +665,11 @@ class UserCollectPost(db.Model):
 class UserLikeComment(db.Model):
     __tablename__ = 'user_like_comment'
 
-    id = db.Column(db.Integer, primary_key=True)
-    user_id = db.Column(db.Integer, db.ForeignKey('users.id'))
+    user_id = db.Column(db.Integer, db.ForeignKey('users.id'),
+                        primary_key=True)
     user = db.relationship('User')
-    comment_id = db.Column(db.Integer, db.ForeignKey('comments.id'))
+    comment_id = db.Column(db.Integer, db.ForeignKey('comments.id'),
+                           primary_key=True)
     comment = db.relationship('Comment')
     create_time = db.Column(db.DateTime(), default=datetime.utcnow)
 
@@ -673,10 +677,11 @@ class UserLikeComment(db.Model):
 class UserLikeTweet(db.Model):
     __tablename__ = 'user_like_tweet'
 
-    id = db.Column(db.Integer, primary_key=True)
-    user_id = db.Column(db.Integer, db.ForeignKey('users.id'))
+    user_id = db.Column(db.Integer, db.ForeignKey('users.id'),
+                        primary_key=True)
     user = db.relationship('User')
-    tweet_id = db.Column(db.Integer, db.ForeignKey('tweets.id'))
+    tweet_id = db.Column(db.Integer, db.ForeignKey('tweets.id'),
+                         primary_key=True)
     tweet = db.relationship('Tweet')
     create_time = db.Column(db.DateTime(), default=datetime.utcnow)
 
