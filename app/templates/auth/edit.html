@@ -20,58 +20,14 @@
       value="{{current_user.about_me|d('', true)}}">
     </div>
   </div>
-  <div class="ui submit button">Submit</div>
+  <div class="ui submit blue button">Submit</div>
 </div>
+{% endblock %}
 
-
-
-for (let i of a) {console.log(i.name, i.value)}
-
-
-<!-- <div class="ui form editProfileForm">
-    <h1 class="ui header">{{current_user.username}}</h1>
-    <div class="fields">
-        <div class="four wide field">
-            <h4>Name</h4>
-        </div>
-        <div class="eight wide field">
-            <input type="text" name="name" placeholder="name"
-            value="{{current_user.name|d('', true)}}"
-            user-id="{{current_user.id}}">
-        </div>
-        <div class="four wide field">
-            <div class="ui blue button">Save</div>
-        </div>
-    </div>
-    <div class="ui divider"></div>
-    <div class="fields">
-        <div class="four wide field">
-            <h4>Location</h4>
-        </div>
-        <div class="eight wide field">
-            <input type="text" name="location" placeholder="location"
-            value="{{current_user.location|d('', true)}}"
-            user-id="{{current_user.id}}">
-        </div>
-        <div class="four wide field">
-            <div class="ui blue button">Save</div>
-        </div>
-    </div>
-    <div class="ui divider"></div>
-    <div class="fields">
-        <div class="four wide field">
-            <h4>About me</h4>
-        </div>
-        <div class="eight wide field">
-            <input type="text" name="about_me" placeholder="about me"
-            value="{{current_user.about_me|d('', true)}}"
-            user-id="{{current_user.id}}">
-        </div>
-        <div class="four wide field">
-            <div class="ui blue button">Save</div>
-        </div>
-    </div>
-
-</div> -->
-
+{% block script %}
+{{super()}}
+<script>
+let button = document.querySelector('.editProfileForm .ui.button')
+button.addEventListener('click', editProfile)
+</script>
 {% endblock %}

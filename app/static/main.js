@@ -157,11 +157,3 @@ let createPostCard = (post) => `
 </div>
 <div class="ui divider"></div>
 `
-
-$(document).ready(function () {
-    closeMessage()
-    dimmerCard()
-    dropdownMenu()
-    activeItem()
-    validateForm()
-})

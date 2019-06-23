@@ -77,11 +77,16 @@
     <script src="https://unpkg.com/axios/dist/axios.min.js"></script>
     <script src="{{url_for('static', filename='main.js')}}"></script>
 
-    {% if current_user.is_authenticated %}
     <script>
+    {% if current_user.is_authenticated %}
     localStorage.setItem('token', '{{session["token"]}}')
-    </script>
     {% endif %}
+    closeMessage()
+    dimmerCard()
+    dropdownMenu()
+    activeItem()
+    validateForm()
+    </script>
 
     {% endblock %}
 
