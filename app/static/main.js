@@ -84,15 +84,16 @@ function validateForm() {
 }
 
 function editProfile() {
-    $('.editProfileForm .ui.button').on('click', function () {
-        let ele = this.closest('.fields').querySelector('input')
-        let user_id = ele.getAttribute('user-id')
-        let data = {}
-        data[ele.name] = ele.value.trim()
-        axios.put(`/users/${user_id}`, data)
-            .then(res => console.log(res))
+    let form = document.querySelector('.editProfileForm')
+    let inputs = form.getElementsByTagName('input')
+    let user_id = form.getAttribute('user-id')
+    let data = {}
+    for (let i of inputs) {
+        data[i.name] = i.value.trim()
+    }
+    axios.put(`/users/${user_id}`, data)
+    .then(res => console.log(res))
 
-    })
 }
 
 function initFeedPosts() {
@@ -163,5 +164,4 @@ $(document).ready(function () {
     dropdownMenu()
     activeItem()
     validateForm()
-    editProfile()
 })

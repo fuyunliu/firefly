@@ -2,8 +2,33 @@
 {% block title %}Firefly - Edit Profile{% endblock %}
 
 {% block content %}
+<div class="ui form editProfileForm" user-id="{{current_user.id}}">
+  <div class="three fields">
+    <div class="field">
+      <label>Name</label>
+      <input type="text" placeholder="name" name="name"
+      value="{{current_user.name|d('', true)}}">
+    </div>
+    <div class="field">
+      <label>Location</label>
+      <input type="text" placeholder="location" name="location"
+      value="{{current_user.location|d('', true)}}">
+    </div>
+    <div class="field">
+      <label>About me</label>
+      <input type="text" placeholder="about me" name="about_me"
+      value="{{current_user.about_me|d('', true)}}">
+    </div>
+  </div>
+  <div class="ui submit button">Submit</div>
+</div>
 
-<div class="ui form editProfileForm">
+
+
+for (let i of a) {console.log(i.name, i.value)}
+
+
+<!-- <div class="ui form editProfileForm">
     <h1 class="ui header">{{current_user.username}}</h1>
     <div class="fields">
         <div class="four wide field">
@@ -47,6 +72,6 @@
         </div>
     </div>
 
-</div>
+</div> -->
 
 {% endblock %}
