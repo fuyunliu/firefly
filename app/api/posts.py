@@ -1,6 +1,6 @@
 # -*- coding: utf-8 -*-
 
-from flask import current_app, g, jsonify, request, url_for, redirect
+from flask import current_app, g, jsonify, request, url_for
 from flask.views import MethodView
 from .. import db
 from ..models import Permission, Post, Comment
@@ -8,7 +8,16 @@ from .errors import forbidden
 
 
 class PostAPI(MethodView):
-
+    """
+    URL                  Method               Description
+    =========== ======================= ===============================
+    /posts               GET                  Gives a list of all posts
+    /posts               POST                 Creates a new post
+    /posts/<id>          GET                  Shows a single post
+    /posts/<id>          PUT                  Updates a single post
+    /posts/<id>          DELETE               Deletes a single post
+    =========== ======================= ===============================
+    """
     def get(self, post_id):
         if post_id is not None:
             post = Post.query.get_or_404(post_id)
@@ -52,17 +61,17 @@ class PostAPI(MethodView):
         post = Post.query.get_or_404(post_id)
         db.session.delete(post)
         db.session.commit()
-        return redirect(url_for('api.post_api'))
+        return ''
 
 
 class PostCommentAPI(MethodView):
     """
-    https://127.0.0.1:5000/api/posts/1/comments
-    GET get post all comments
-    POST create a comment for post
-
+    URL                  Method               Description
+    =========== ======================= ===============================
+    /posts/<id>/comments   GET                post`s all comments
+    /posts/<id>/comments   POST               create a new post`s comment
+    =========== ======================= ===============================
     """
-
     def get(self, post_id):
         post = Post.query.get_or_404(post_id)
         page = request.args.get('page', 1, type=int)
@@ -96,16 +105,37 @@ class PostCommentAPI(MethodView):
 
 class PostLikeAPI(MethodView):
     """
-    https://127.0.0.1:5000/api/posts/1/likes
-    POST  user like a post
-    DELETE user dislike a post
+    URL                  Method               Description
+    =========== ======================= ===============================
+    /posts/<id>/likes    POST            user like a post
+    /posts/<id>/likes    DELETE          user dislike a post
+    =========== ======================= ===============================
     """
+    def post(self, post_id):
+        post = Post.query.get_or_404(post_id)
+        g.current_user.like_post(post)
+        db.session.commit()
+
+    def delete(self, post_id):
+        post = Post.query.get_or_404(post_id)
+        g.current_user.dislike_post(post)
+        db.session.commit()
 
 
 class PostCollectAPI(MethodView):
+    """
+    URL                  Method               Description
+    =========== ======================= ===============================
+    /posts/<id>/collects  POST            user collect a post
+    /posts/<id>/collects  DELETE          user discollect a post
+    =========== ======================= ===============================
+    """
+    def post(self, post_id):
+        post = Post.query.get_or_404(post_id)
+        g.current_user.collect_post(post)
+        db.session.commit()
 
-    """
-    https://127.0.0.1:5000/api/posts/1/collects
-    POST  user collect a post
-    DELETE user discollect a post
-    """
+    def delete(self, post_id):
+        post = Post.query.get_or_404(post_id)
+        g.current_user.discollect_post(post)
+        db.session.commit()

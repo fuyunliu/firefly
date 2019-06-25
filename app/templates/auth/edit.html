@@ -2,7 +2,7 @@
 {% block title %}Firefly - Edit Profile{% endblock %}
 
 {% block content %}
-<div class="ui form editProfileForm" user-id="{{current_user.id}}">
+<div class="ui form">
   <div class="three fields">
     <div class="field">
       <label>Name</label>
@@ -27,7 +27,7 @@
 {% block script %}
 {{super()}}
 <script>
-let button = document.querySelector('.editProfileForm .ui.button')
+let button = document.querySelector('.ui.form .ui.button')
 button.addEventListener('click', editProfile)
 </script>
 {% endblock %}

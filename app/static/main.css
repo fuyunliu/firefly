@@ -16,3 +16,7 @@
 .ui.card.noBorderCard > .content {
     border-top: none !important;
 }
+
+.iconItem {
+    min-width: 80px;
+}

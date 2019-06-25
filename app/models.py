@@ -495,9 +495,9 @@ class Post(db.Model):
         }
         user = get_current_user()
         if user is not None:
-            css = {'heart': 'heart', 'star': 'star'}
+            css = {'like': 'like', 'star': 'star'}
             if user.is_like_post(self):
-                css['heart'] = 'red heart'
+                css['like'] = 'red like'
             if user.is_collect_post(self):
                 css['star'] = 'yellow star'
             data['css'] = css

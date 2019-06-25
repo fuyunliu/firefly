@@ -4,7 +4,7 @@ from sqlalchemy.exc import IntegrityError
 from faker import Faker
 
 from app import db, create_app
-from app.models import User, Post
+from app.models import User, Post, Comment
 
 
 def users(count=100):
@@ -38,10 +38,24 @@ def posts(count=100):
             body=fake.text(),
             create_time=fake.past_date(),
             update_time=fake.past_date(),
-            author=user,
-            author_name=user.username
+            author=user
         )
         db.session.add(post)
+    db.session.commit()
+
+
+def comments(count=100):
+    fake = Faker()
+    user_count = User.query.count()
+    for post in Post.query.all():
+        for _ in range(count):
+            user = User.query.offset(randint(0, user_count - 1)).first()
+            comment = Comment(
+                body=fake.sentence(),
+                post=post,
+                author=user
+            )
+            db.session.add(comment)
     db.session.commit()
 
 
@@ -49,7 +63,8 @@ def run():
     app = create_app('default')
     with app.app_context():
         # users(100)
-        posts(100)
+        # posts(100)
+        comments(100)
 
 
 if __name__ == "__main__":

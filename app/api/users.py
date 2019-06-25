@@ -9,7 +9,16 @@ from .errors import forbidden
 
 
 class UserAPI(MethodView):
-
+    """
+    URL                  Method               Description
+    =========== ======================= ===============================
+    /users               GET                  Gives a list of all users
+    /users               POST                 Creates a new user
+    /users/<id>          GET                  Shows a single user
+    /users/<id>          PUT                  Updates a single user
+    /users/<id>          DELETE               Deletes a single user
+    =========== ======================= ===============================
+    """
     def get(self, user_id):
         if user_id is not None:
             user = User.query.get_or_404(user_id)
@@ -62,7 +71,10 @@ class UserAPI(MethodView):
 
 class UserPostAPI(MethodView):
     """
-    https://127.0.0.1:5000/api/users/1/posts
+    URL                  Method               Description
+    =========== ======================= ===============================
+    /users/<id>/posts    GET                  user all posts
+    =========== ======================= ===============================
     """
     def get(self, user_id):
         user = User.query.get_or_404(user_id)
@@ -93,7 +105,10 @@ class UserPostAPI(MethodView):
 
 class UserTweetAPI(MethodView):
     """
-    https://127.0.0.1:5000/api/users/1/tweets
+    URL                  Method               Description
+    =========== ======================= ===============================
+    /users/<id>/tweets   GET                  user all tweete
+    =========== ======================= ===============================
     """
     def get(self, user_id):
         user = User.query.get_or_404(user_id)
@@ -124,7 +139,10 @@ class UserTweetAPI(MethodView):
 
 class UserCommentAPI(MethodView):
     """
-    https://127.0.0.1:5000/api/users/1/comments
+    URL                  Method               Description
+    =========== ======================= ===============================
+    /users/<id>/comments   GET             user all comments
+    =========== ======================= ===============================
     """
     def get(self, user_id):
         user = User.query.get_or_404(user_id)
@@ -155,7 +173,10 @@ class UserCommentAPI(MethodView):
 
 class UserFavorite(MethodView):
     """
-    https://127.0.0.1:5000/api/users/1/favorites
+    URL                  Method               Description
+    =========== ======================= ===============================
+    /users/<id>/favorites  GET             user all favorites
+    =========== ======================= ===============================
     """
     def get(self, user_id):
         user = User.query.get_or_404(user_id)
@@ -186,8 +207,10 @@ class UserFavorite(MethodView):
 
 class UserLikeAPI(MethodView):
     """
-    https://127.0.0.1:5000/api/users/1/likes
-    喜欢的文章post，喜欢的推特tweet，喜欢的评论comment
+    URL                  Method               Description
+    =========== ======================= ===============================
+    /users/<id>/likes    GET            user liked posts, tweets, comments
+    =========== ======================= ===============================
     """
     def get(self, user_id):
         user = User.query.get_or_404(user_id)
@@ -226,7 +249,10 @@ class UserLikeAPI(MethodView):
 
 class UserCollectAPI(MethodView):
     """
-    https://127.0.0.1:5000/api/users/1/collects
+    URL                  Method               Description
+    =========== ======================= ===============================
+    /users/<id>/collects  GET            user collected posts
+    =========== ======================= ===============================
     """
     def get(self, user_id):
         user = User.query.get_or_404(user_id)

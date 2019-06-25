@@ -83,17 +83,23 @@ function validateForm() {
     })
 }
 
+function initBase() {
+    closeMessage()
+    dimmerCard()
+    dropdownMenu()
+    activeItem()
+    validateForm()
+}
+
 function editProfile() {
-    let form = document.querySelector('.editProfileForm')
-    let inputs = form.getElementsByTagName('input')
-    let user_id = form.getAttribute('user-id')
+    let inputs = this.closest('.ui.form').getElementsByTagName('input')
+    let user_id = localStorage.getItem('user:id')
     let data = {}
     for (let i of inputs) {
         data[i.name] = i.value.trim()
     }
     axios.put(`/users/${user_id}`, data)
     .then(res => console.log(res))
-
 }
 
 function initFeedPosts() {
@@ -105,6 +111,8 @@ function initFeedPosts() {
                 html => lc.insertAdjacentHTML('beforeend', html)
             )
             localStorage.setItem('posts:next', res['data']['next'])
+            let sc = document.getElementsByClassName('showComment')
+            Array.from(sc, e => e.addEventListener('click', showComment))
         }
     )
 }
@@ -121,6 +129,8 @@ function getFeedPosts() {
                 html => lc.insertAdjacentHTML('beforeend', html)
             )
             localStorage.setItem('posts:next', res['data']['next'])
+            let sc = document.getElementsByClassName('showComment')
+            Array.from(sc, e => e.addEventListener('click', showComment))
         }
     )
 }
@@ -133,25 +143,36 @@ function initHotPosts() {
 
 }
 
+function showComment() {
+    $('.ui.modal').modal('show')
+}
+
 
 let createPostCard = (post) => `
 <div class="ui fluid card noBorderCard">
   <div class="content">
     <div class="right floated meta">${post.create_time}</div>
     <div class="header">${post.title}</div>
-    <div class="meta">${post.author_name}</div>
+    <div class="meta">${post.author.username}</div>
     <div class="description">
       <p>${post.body}</p>
     </div>
   </div>
   <div class="extra content">
+    <span class="left floated iconItem">
+        <i class="${post.css.like} link icon"></i>${post.like_count}
+    </span>
+    <span class="left floated iconItem">
+        <i class="comment link icon showComment"></i>${post.comment_count}
+    </span>
+    <span class="left floated iconItem">
+        <i class="${post.css.star} link icon"></i>${post.collect_count}
+    </span>
     <span class="left floated">
-      <i class="${post.heart_css} link icon"></i>
-      ${post.like_count} Likes
+        <i class="paper plane link icon"></i>
     </span>
     <span class="right floated">
-      <i class="${post.star_css} icon"></i>
-      Favorites
+        <i class="${post.css.star} icon"></i>${post.collect_count}
     </span>
   </div>
 </div>

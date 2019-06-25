@@ -12,26 +12,26 @@ api = Blueprint('api', __name__)
 auth = HTTPTokenAuth()
 
 
-# @auth.verify_token
+@auth.verify_token
 def verify_token(token):
     g.current_user = User.verify_auth_token(token)
     return g.current_user is not None
 
 
-# @auth.error_handler
+@auth.error_handler
 def auth_error():
     return unauthorized('Invalid credentials')
 
 
-# @api.before_request
-# @auth.login_required
+@api.before_request
+@auth.login_required
 def before_request():
     if not g.current_user.is_anonymous and not g.current_user.confirmed:
         return forbidden('Unconfirmed account')
 
 
-# @api.after_request
-# @auth.login_required
+@api.after_request
+@auth.login_required
 def after_request(response):
     data = json.loads(response.get_data())
     data['token'] = g.current_user.generate_auth_token()
@@ -39,7 +39,7 @@ def after_request(response):
     return response
 
 
-# @api.route('/tokens', methods=['POST'])
+@api.route('/tokens', methods=['POST'])
 def create_token():
     return jsonify({
         'token': g.current_user.generate_auth_token(),
@@ -48,17 +48,6 @@ def create_token():
 
 
 def register_api(view, rule, endpoint, primary_key='id', converter='int'):
-    """
-    URL                  Method               Description
-    =========== ======================= ===============================
-    /users               GET                  Gives a list of all users
-    /users               POST                 Creates a new user
-    /users/<id>          GET                  Shows a single user
-    /users/<id>          PUT                  Updates a single user
-    /users/<id>          DELETE               Deletes a single user
-    =========== ======================= ===============================
-    """
-
     view_func = view.as_view(endpoint)
     api.add_url_rule(f'/{rule}', defaults={primary_key: None},
                      view_func=view_func, methods=['GET'])
