@@ -22,10 +22,10 @@ class UserAPI(MethodView):
             error_out=False)
         prev = None
         if pagination.has_prev:
-            prev = url_for('api.user_api', page=page - 1, _external=True)
+            prev = url_for('api.users', page=page - 1, _external=True)
         next = None
         if pagination.has_next:
-            next = url_for('api.user_api', page=page + 1, _external=True)
+            next = url_for('api.users', page=page + 1, _external=True)
         return jsonify({
             'users': [p.dumps() for p in pagination.items],
             'prev': prev,
@@ -41,7 +41,7 @@ class UserAPI(MethodView):
         send_email(user.email, 'Confirm Your Account',
                    'auth/email/confirm', user=user, token=token)
         return jsonify(user.dumps()), 201, \
-            {'Location': url_for('api.user_api', user_id=user.id)}
+            {'Location': url_for('api.users', user_id=user.id)}
 
     def put(self, user_id):
         user = User.query.get_or_404(user_id)
@@ -147,7 +147,7 @@ class UserCommentAPI(MethodView):
         })
 
 
-class UserFavorite(MethodView):
+class UserFavoriteAPI(MethodView):
 
     def get(self, user_id):
         user = User.query.get_or_404(user_id)
@@ -158,13 +158,13 @@ class UserFavorite(MethodView):
             error_out=False)
         prev = None
         if pagination.has_prev:
-            prev = url_for('api.user_comment',
+            prev = url_for('api.user_favorite',
                            user_id=user_id,
                            page=page - 1,
                            _external=True)
         next = None
         if pagination.has_next:
-            next = url_for('api.user_comment',
+            next = url_for('api.user_favorite',
                            user_id=user_id,
                            page=page + 1,
                            _external=True)

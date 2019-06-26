@@ -350,6 +350,24 @@ class User(UserMixin, db.Model):
                                            tweet_id=tweet.id).first()
         return lt is not None
 
+    def collect_tweet(self, tweet):
+        if not self.is_collect_tweet(tweet):
+            ct = UserCollectTweet(user=self, tweet=tweet)
+            db.session.add(ct)
+
+    def discollect_tweet(self, tweet):
+        ct = UserCollectTweet.query.filter_by(user_id=self.id,
+                                              tweet_id=tweet.id).first()
+        if ct is not None:
+            db.session.delete(ct)
+
+    def is_collect_tweet(self, tweet):
+        if tweet.id is None:
+            return False
+        ct = UserCollectTweet.query.filter_by(user_id=self.id,
+                                              tweet_id=tweet.id).first()
+        return ct is not None
+
     def like_comment(self, comment):
         if not self.is_like_comment(comment):
             lc = UserLikeComment(user=self, comment=comment)
@@ -402,7 +420,7 @@ class User(UserMixin, db.Model):
             'avatar': self.gravatar(size=18),
             'member_since': self.member_since.year,
             'last_seen': timesince(self.last_seen),
-            'url': url_for('api.user_api', user_id=self.id, _external=True)
+            'url': url_for('api.users', user_id=self.id, _external=True)
         }
         return user
 
@@ -500,7 +518,7 @@ class Post(db.Model):
             'like_count': query_count(self.liked_users),
             'collect_count': query_count(self.collected_users),
             'comment_count': query_count(self.comments),
-            'url': url_for('api.post_api', post_id=self.id, _external=True),
+            'url': url_for('api.posts', post_id=self.id, _external=True),
             'author': self.author.dumps()
         }
         user = get_current_user()
@@ -546,6 +564,11 @@ class Tweet(db.Model):
                                   secondary='user_like_tweet',
                                   lazy='dynamic')
 
+    # 收藏推特的人
+    collected_users = db.relationship('User',
+                                      secondary='user_collect_tweet',
+                                      lazy='dynamic')
+
     @staticmethod
     def on_changed_body(target, value, oldvalue, initiator):
         truncate = partial(
@@ -561,8 +584,9 @@ class Tweet(db.Model):
             'body_html': self.body_html,
             'create_time': timesince(self.create_time),
             'like_count': query_count(self.liked_users),
+            'collect_count': query_count(self.collected_users),
             'comment_count': query_count(self.comments),
-            'url': url_for('api.tweet_api', tweet_id=self.id, _external=True),
+            'url': url_for('api.tweets', tweet_id=self.id, _external=True),
             'author': self.author.dumps()
         }
         user = get_current_user()
@@ -620,8 +644,8 @@ class Comment(db.Model):
             'body_html': self.body_html,
             'create_time': timesince(self.create_time),
             'like_count': query_count(self.liked_users),
-            'comment_count': query_count(self.children),
-            'url': url_for('api.comment_api',
+            'reply_count': query_count(self.children),
+            'url': url_for('api.comments',
                            comment_id=self.id,
                            _external=True),
             'author': self.author.dumps()
@@ -636,14 +660,25 @@ class Comment(db.Model):
     @staticmethod
     def loads(data):
         body = data.get('body')
-        reply_id = data.get('reply_id')
         if null_or_empty(body):
             raise ValueError('comment does not have a body')
         comment = Comment(body=body)
-        if reply_id is not None:
-            reply = User.query.get(int(reply_id))
-            if reply is not None:
-                comment.reply = reply
+        post_id = data.get('post_id')
+        if post_id is not None:
+            post = Post.query.get(int(post_id))
+            comment.post = post
+        tweet_id = data.get('tweet_id')
+        if tweet_id is not None:
+            tweet = Tweet.query.get(int(tweet_id))
+            comment.tweet = tweet
+        parent_id = data.get('parent_id')
+        if parent_id is not None:
+            parent = Comment.query.get(int(parent_id))
+            comment.parent = parent
+        author_id = data.get('author_id')
+        if author_id is not None:
+            author = User.query.get(int(author_id))
+            comment.author = author
         return comment
 
     def __repr__(self):
@@ -707,6 +742,21 @@ class UserLikeTweet(db.Model):
     tweet_id = db.Column(db.Integer, db.ForeignKey('tweets.id'),
                          primary_key=True)
     tweet = db.relationship('Tweet')
+    create_time = db.Column(db.DateTime(), default=datetime.utcnow)
+
+
+class UserCollectTweet(db.Model):
+    __tablename__ = 'user_collect_tweet'
+
+    user_id = db.Column(db.Integer, db.ForeignKey('users.id'),
+                        primary_key=True)
+    user = db.relationship('User')
+    tweet_id = db.Column(db.Integer, db.ForeignKey('tweets.id'),
+                         primary_key=True)
+    tweet = db.relationship('Tweet')
+    favorite_id = db.Column(db.Integer, db.ForeignKey('favorites.id'),
+                            primary_key=True)
+    favorite = db.relationship('Favorite')
     create_time = db.Column(db.DateTime(), default=datetime.utcnow)
 
 

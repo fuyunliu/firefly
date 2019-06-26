@@ -23,7 +23,7 @@ class PostAPI(MethodView):
                 .order_by(Post.id.desc()).limit(size)
         return jsonify({
             'posts': [p.dumps() for p in items],
-            'next': url_for('api.post_api',
+            'next': url_for('api.posts',
                             max_id=min(p.id for p in items),
                             _external=True) if items.count() else None
         })
@@ -31,11 +31,10 @@ class PostAPI(MethodView):
     def post(self):
         post = Post.loads(request.json)
         post.author = g.current_user
-        post.author_name = g.current_user.username
         db.session.add(post)
         db.session.commit()
         return jsonify(post.dumps()), 201, \
-            {'Location': url_for('api.post_api', post_id=post.id)}
+            {'Location': url_for('api.posts', post_id=post.id)}
 
     def put(self, post_id):
         post = Post.query.get_or_404(post_id)
@@ -52,7 +51,7 @@ class PostAPI(MethodView):
         post = Post.query.get_or_404(post_id)
         db.session.delete(post)
         db.session.commit()
-        return ''
+        return jsonify({'success': 'true'})
 
 
 class PostCommentAPI(MethodView):
@@ -66,11 +65,11 @@ class PostCommentAPI(MethodView):
             error_out=False)
         prev = None
         if pagination.has_prev:
-            prev = url_for('api.post_comment_api', post_id=post_id,
+            prev = url_for('api.post_comment', post_id=post_id,
                            page=page - 1, _external=True)
         next = None
         if pagination.has_next:
-            next = url_for('api.post_comment_api', post_id=post_id,
+            next = url_for('api.post_comment', post_id=post_id,
                            page=page + 1, _external=True)
         return jsonify({
             'comments': [p.dumps() for p in pagination.items],

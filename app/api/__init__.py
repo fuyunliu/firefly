@@ -3,8 +3,11 @@
 import json
 from flask import Blueprint, g, jsonify
 from flask_httpauth import HTTPTokenAuth
-from .users import UserAPI
-from .posts import PostAPI
+from .users import UserAPI, UserPostAPI, UserTweetAPI, UserCommentAPI, \
+    UserFavoriteAPI, UserLikeAPI, UserCollectAPI
+from .posts import PostAPI, PostCommentAPI, PostLikeAPI, PostCollectAPI
+from .tweets import TweetAPI
+from .comments import CommentAPI
 from .errors import unauthorized, forbidden
 from ..models import User
 
@@ -14,7 +17,8 @@ auth = HTTPTokenAuth()
 
 @auth.verify_token
 def verify_token(token):
-    g.current_user = User.verify_auth_token(token)
+    # g.current_user = User.verify_auth_token(token)
+    g.current_user = User.query.get(101)
     return g.current_user is not None
 
 
@@ -47,15 +51,107 @@ def create_token():
     })
 
 
-def register_api(view, rule, endpoint, primary_key='id', converter='int'):
-    view_func = view.as_view(endpoint)
-    api.add_url_rule(f'/{rule}', defaults={primary_key: None},
-                     view_func=view_func, methods=['GET'])
-    api.add_url_rule(f'/{rule}', view_func=view_func, methods=['POST'])
-    api.add_url_rule(f'/{rule}/<{converter}:{primary_key}>',
-                     view_func=view_func,
-                     methods=['GET', 'PUT', 'DELETE'])
+user_view = UserAPI.as_view('users')
+api.add_url_rule(
+    rule='/users',
+    defaults={'user_id': None},
+    view_func=user_view,
+    methods=['GET']
+)
+api.add_url_rule(
+    rule='/users',
+    view_func=user_view,
+    methods=['POST']
+)
+api.add_url_rule(
+    rule='/users/<int:user_id>',
+    view_func=user_view,
+    methods=['GET', 'PUT', 'DELETE']
+)
 
+post_view = PostAPI.as_view('posts')
+api.add_url_rule(
+    rule='/posts',
+    defaults={'post_id': None},
+    view_func=post_view,
+    methods=['GET']
+)
+api.add_url_rule(
+    rule='/posts',
+    view_func=post_view,
+    methods=['POST']
+)
+api.add_url_rule(
+    rule='/posts/<int:post_id>',
+    view_func=post_view,
+    methods=['GET', 'PUT', 'DELETE']
+)
 
-register_api(UserAPI, 'users', 'user_api', primary_key='user_id')
-register_api(PostAPI, 'posts', 'post_api', primary_key='post_id')
+tweet_view = TweetAPI.as_view('tweets')
+api.add_url_rule(
+    rule='/tweets',
+    defaults={'tweet_id': None},
+    view_func=tweet_view,
+    methods=['GET']
+)
+api.add_url_rule(
+    rule='/tweets',
+    view_func=tweet_view,
+    methods=['POST']
+)
+api.add_url_rule(
+    rule='/tweets/<int:tweet_id>',
+    view_func=tweet_view,
+    methods=['GET', 'DELETE']
+)
+
+api.add_url_rule(
+    rule='/posts/<int:post_id>/comments',
+    view_func=PostCommentAPI.as_view('post_comment'),
+    methods=['GET', 'POST']
+)
+api.add_url_rule(
+    rule='/posts/<int:post_id>/likes',
+    view_func=PostLikeAPI.as_view('post_like'),
+    methods=['POST', 'DELETE']
+)
+api.add_url_rule(
+    rule='/posts/<int:post_id>/collects',
+    view_func=PostCollectAPI.as_view('post_collect'),
+    methods=['POST', 'DELETE']
+)
+api.add_url_rule(
+    rule='/comments/<int:comment_id>',
+    view_func=CommentAPI.as_view('comments'),
+    methods=['GET', 'DELETE']
+)
+api.add_url_rule(
+    rule='/users/<int:user_id>/posts',
+    view_func=UserPostAPI.as_view('user_post'),
+    methods=['GET']
+)
+api.add_url_rule(
+    rule='/users/<int:user_id>/tweets',
+    view_func=UserTweetAPI.as_view('user_tweet'),
+    methods=['GET']
+)
+api.add_url_rule(
+    rule='/users/<int:user_id>/comments',
+    view_func=UserCommentAPI.as_view('user_comment'),
+    methods=['GET']
+)
+api.add_url_rule(
+    rule='/users/<int:user_id>/favorites',
+    view_func=UserFavoriteAPI.as_view('user_favorite'),
+    methods=['GET']
+)
+api.add_url_rule(
+    rule='/users/<int:user_id>/likes',
+    view_func=UserLikeAPI.as_view('user_like'),
+    methods=['GET']
+)
+api.add_url_rule(
+    rule='/users/<int:user_id>/collects',
+    view_func=UserCollectAPI.as_view('user_collect'),
+    methods=['GET']
+)
