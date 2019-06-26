@@ -8,16 +8,7 @@ from .errors import forbidden
 
 
 class PostAPI(MethodView):
-    """
-    URL                  Method               Description
-    =========== ======================= ===============================
-    /posts               GET                  Gives a list of all posts
-    /posts               POST                 Creates a new post
-    /posts/<id>          GET                  Shows a single post
-    /posts/<id>          PUT                  Updates a single post
-    /posts/<id>          DELETE               Deletes a single post
-    =========== ======================= ===============================
-    """
+
     def get(self, post_id):
         if post_id is not None:
             post = Post.query.get_or_404(post_id)
@@ -65,13 +56,7 @@ class PostAPI(MethodView):
 
 
 class PostCommentAPI(MethodView):
-    """
-    URL                  Method               Description
-    =========== ======================= ===============================
-    /posts/<id>/comments   GET                post`s all comments
-    /posts/<id>/comments   POST               create a new post`s comment
-    =========== ======================= ===============================
-    """
+
     def get(self, post_id):
         post = Post.query.get_or_404(post_id)
         page = request.args.get('page', 1, type=int)
@@ -104,13 +89,7 @@ class PostCommentAPI(MethodView):
 
 
 class PostLikeAPI(MethodView):
-    """
-    URL                  Method               Description
-    =========== ======================= ===============================
-    /posts/<id>/likes    POST            user like a post
-    /posts/<id>/likes    DELETE          user dislike a post
-    =========== ======================= ===============================
-    """
+
     def post(self, post_id):
         post = Post.query.get_or_404(post_id)
         g.current_user.like_post(post)
@@ -123,13 +102,7 @@ class PostLikeAPI(MethodView):
 
 
 class PostCollectAPI(MethodView):
-    """
-    URL                  Method               Description
-    =========== ======================= ===============================
-    /posts/<id>/collects  POST            user collect a post
-    /posts/<id>/collects  DELETE          user discollect a post
-    =========== ======================= ===============================
-    """
+
     def post(self, post_id):
         post = Post.query.get_or_404(post_id)
         g.current_user.collect_post(post)

@@ -4,21 +4,12 @@ from flask import g, request, jsonify, current_app, url_for
 from flask.views import MethodView
 from .. import db
 from ..models import User, Permission
-from ..tasks import send_email, delete_account
+from ..backends import send_email, delete_account
 from .errors import forbidden
 
 
 class UserAPI(MethodView):
-    """
-    URL                  Method               Description
-    =========== ======================= ===============================
-    /users               GET                  Gives a list of all users
-    /users               POST                 Creates a new user
-    /users/<id>          GET                  Shows a single user
-    /users/<id>          PUT                  Updates a single user
-    /users/<id>          DELETE               Deletes a single user
-    =========== ======================= ===============================
-    """
+
     def get(self, user_id):
         if user_id is not None:
             user = User.query.get_or_404(user_id)
@@ -70,12 +61,7 @@ class UserAPI(MethodView):
 
 
 class UserPostAPI(MethodView):
-    """
-    URL                  Method               Description
-    =========== ======================= ===============================
-    /users/<id>/posts    GET                  user all posts
-    =========== ======================= ===============================
-    """
+
     def get(self, user_id):
         user = User.query.get_or_404(user_id)
         page = request.args.get('page', 1, type=int)
@@ -104,12 +90,7 @@ class UserPostAPI(MethodView):
 
 
 class UserTweetAPI(MethodView):
-    """
-    URL                  Method               Description
-    =========== ======================= ===============================
-    /users/<id>/tweets   GET                  user all tweete
-    =========== ======================= ===============================
-    """
+
     def get(self, user_id):
         user = User.query.get_or_404(user_id)
         page = request.args.get('page', 1, type=int)
@@ -138,12 +119,7 @@ class UserTweetAPI(MethodView):
 
 
 class UserCommentAPI(MethodView):
-    """
-    URL                  Method               Description
-    =========== ======================= ===============================
-    /users/<id>/comments   GET             user all comments
-    =========== ======================= ===============================
-    """
+
     def get(self, user_id):
         user = User.query.get_or_404(user_id)
         page = request.args.get('page', 1, type=int)
@@ -172,12 +148,7 @@ class UserCommentAPI(MethodView):
 
 
 class UserFavorite(MethodView):
-    """
-    URL                  Method               Description
-    =========== ======================= ===============================
-    /users/<id>/favorites  GET             user all favorites
-    =========== ======================= ===============================
-    """
+
     def get(self, user_id):
         user = User.query.get_or_404(user_id)
         page = request.args.get('page', 1, type=int)
@@ -206,12 +177,7 @@ class UserFavorite(MethodView):
 
 
 class UserLikeAPI(MethodView):
-    """
-    URL                  Method               Description
-    =========== ======================= ===============================
-    /users/<id>/likes    GET            user liked posts, tweets, comments
-    =========== ======================= ===============================
-    """
+
     def get(self, user_id):
         user = User.query.get_or_404(user_id)
         type = request.args.get('type', 'post', type=str)
@@ -248,12 +214,7 @@ class UserLikeAPI(MethodView):
 
 
 class UserCollectAPI(MethodView):
-    """
-    URL                  Method               Description
-    =========== ======================= ===============================
-    /users/<id>/collects  GET            user collected posts
-    =========== ======================= ===============================
-    """
+
     def get(self, user_id):
         user = User.query.get_or_404(user_id)
         page = request.args.get('page', 1, type=int)

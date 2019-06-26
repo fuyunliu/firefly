@@ -93,7 +93,7 @@ class User(UserMixin, db.Model):
     confirmed = db.Column(db.Boolean, default=False)
     name = db.Column(db.String(64))
     location = db.Column(db.String(64))
-    about_me = db.Column(db.Text())
+    about_me = db.Column(db.Text)
     member_since = db.Column(db.DateTime(), default=datetime.utcnow)
     last_seen = db.Column(db.DateTime(), default=datetime.utcnow)
     token_create = db.Column(db.DateTime(), default=datetime.utcnow)
@@ -457,6 +457,7 @@ class Post(db.Model):
     title = db.Column(db.String(64), index=True)
     body = db.Column(db.Text)
     body_html = db.Column(db.Text)
+    abstract = db.Column(db.Text)
     author_id = db.Column(db.Integer, db.ForeignKey('users.id'))
     create_time = db.Column(db.DateTime(), index=True, default=datetime.utcnow)
     update_time = db.Column(db.DateTime(),
@@ -521,6 +522,7 @@ class Tweet(db.Model):
     id = db.Column(db.Integer, primary_key=True)
     body = db.Column(db.Text)
     body_html = db.Column(db.Text)
+    abstract = db.Column(db.Text)
     author_id = db.Column(db.Integer, db.ForeignKey('users.id'))
     create_time = db.Column(db.DateTime(), index=True, default=datetime.utcnow)
 
@@ -631,7 +633,7 @@ class Favorite(db.Model):
 
     id = db.Column(db.Integer, primary_key=True)
     name = db.Column(db.String(64))
-    desc = db.Column(db.Text())
+    desc = db.Column(db.Text)
     user_id = db.Column(db.Integer, db.ForeignKey('users.id'))
 
 
@@ -691,14 +693,14 @@ class Topic(db.Model):
 
     id = db.Column(db.Integer, primary_key=True)
     name = db.Column(db.String(64))
-    desc = db.Column(db.Text())
+    desc = db.Column(db.Text)
 
 
 class Message(db.Model):
     __tablename__ = 'messages'
 
     id = db.Column(db.Integer, primary_key=True)
-    body = db.Column(db.Text())
+    body = db.Column(db.Text)
     user_id = db.Column(db.Integer, db.ForeignKey('users.id'))
     is_read = db.Column(db.Boolean, default=False)
     sender = db.Column(db.String(64), default='system')
