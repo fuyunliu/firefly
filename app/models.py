@@ -2,6 +2,7 @@
 
 import hashlib
 from datetime import datetime
+from functools import partial
 from itsdangerous import TimedJSONWebSignatureSerializer as Serializer
 from werkzeug.security import generate_password_hash, check_password_hash
 from flask import current_app, url_for, g
@@ -480,6 +481,14 @@ class Post(db.Model):
                                       secondary='user_collect_post',
                                       lazy='dynamic')
 
+    @staticmethod
+    def on_changed_body(target, value, oldvalue, initiator):
+        truncate = partial(
+            current_app.jinja_env.filters['truncate'],
+            current_app.jinja_env)
+        target.abstract = truncate(value, length=64)
+        # todo target.body_html
+
     def dumps(self):
         data = {
             'id': self.id,
@@ -537,6 +546,14 @@ class Tweet(db.Model):
                                   secondary='user_like_tweet',
                                   lazy='dynamic')
 
+    @staticmethod
+    def on_changed_body(target, value, oldvalue, initiator):
+        truncate = partial(
+            current_app.jinja_env.filters['truncate'],
+            current_app.jinja_env)
+        target.abstract = truncate(value, length=64)
+        # todo target.body_html
+
     def dumps(self):
         data = {
             'id': self.id,
@@ -590,6 +607,11 @@ class Comment(db.Model):
     liked_users = db.relationship('User',
                                   secondary='user_like_comment',
                                   lazy='dynamic')
+
+    @staticmethod
+    def on_changed_body(target, value, oldvalue, initiator):
+        pass
+        # todo target.body_html
 
     def dumps(self):
         data = {
