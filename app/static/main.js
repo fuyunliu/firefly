@@ -159,19 +159,19 @@ let createPostCard = (post) => `
     </div>
   </div>
   <div class="extra content">
-    <span class="left floated iconItem">
+    <span class="left floated iconItem" title="Like">
         <i class="${post.css.like} link icon"></i>${post.like_count}
     </span>
-    <span class="left floated iconItem">
+    <span class="left floated iconItem" title="Comment">
         <i class="comment link icon showComment"></i>${post.comment_count}
     </span>
-    <span class="left floated iconItem">
+    <span class="left floated iconItem" title="Favorite">
         <i class="${post.css.star} link icon"></i>${post.collect_count}
     </span>
-    <span class="left floated">
+    <span class="left floated" title="Share">
         <i class="paper plane link icon"></i>
     </span>
-    <span class="right floated">
+    <span class="right floated" title="Favorite">
         <i class="${post.css.star} icon"></i>${post.collect_count}
     </span>
   </div>
