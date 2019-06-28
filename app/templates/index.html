@@ -76,6 +76,6 @@ all_posts.addEventListener('click', initFeedPosts)
 following_posts.addEventListener('click', initFollowingPosts)
 hot_posts.addEventListener('click', initHotPosts)
 document.addEventListener('DOMContentLoaded', initFeedPosts)
-window.addEventListener('scroll', _.throttle(getFeedPosts, 200))
+window.addEventListener('scroll', _.throttle(getFeedPosts, 300))
 </script>
 {% endblock %}

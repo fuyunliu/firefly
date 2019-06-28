@@ -74,7 +74,7 @@
     crossorigin="anonymous"></script>
     <script src="{{url_for('static', filename='semantic.min.js')}}"></script>
     <script src="{{url_for('static', filename='lodash.min.js')}}"></script>
-    <script src="https://unpkg.com/axios/dist/axios.min.js"></script>
+    <script src="{{url_for('static', filename='axios.min.js')}}"></script>
     <script src="{{url_for('static', filename='main.js')}}"></script>
 
     {% if current_user.is_authenticated %}

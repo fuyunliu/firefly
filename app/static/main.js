@@ -118,7 +118,7 @@ function initFeedPosts() {
 }
 
 function getFeedPosts() {
-    const down = window.pageYOffset + window.innerHeight >= document.documentElement.scrollHeight
+    const down = window.pageYOffset + window.innerHeight >= document.documentElement.scrollHeight - 200
     if (!down) {return}
     const next = localStorage.getItem('posts:next')
     if (next == 'null') {return}
