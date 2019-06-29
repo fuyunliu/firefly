@@ -17,8 +17,7 @@ auth = HTTPTokenAuth()
 
 @auth.verify_token
 def verify_token(token):
-    # g.current_user = User.verify_auth_token(token)
-    g.current_user = User.query.get(101)
+    g.current_user = User.verify_auth_token(token)
     return g.current_user is not None
 
 
@@ -45,10 +44,7 @@ def after_request(response):
 
 @api.route('/tokens', methods=['POST'])
 def create_token():
-    return jsonify({
-        'token': g.current_user.generate_auth_token(),
-        'expiration': 3600,
-    })
+    return 'ok'
 
 
 user_view = UserAPI.as_view('users')

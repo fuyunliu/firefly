@@ -97,7 +97,6 @@ class User(UserMixin, db.Model):
     about_me = db.Column(db.Text)
     member_since = db.Column(db.DateTime(), default=datetime.utcnow)
     last_seen = db.Column(db.DateTime(), default=datetime.utcnow)
-    token_create = db.Column(db.DateTime(), default=datetime.utcnow)
     avatar_hash = db.Column(db.String(32))
     role_id = db.Column(db.Integer, db.ForeignKey('roles.id'))
 
@@ -172,10 +171,6 @@ class User(UserMixin, db.Model):
         if self.email is not None and self.avatar_hash is None:
             self.avatar_hash = self.gravatar_hash()
         self.follow(self)
-
-    @property
-    def token_timestamp(self):
-        return int(self.token_create.timestamp() * 1000)
 
     @property
     def password(self):
@@ -392,13 +387,7 @@ class User(UserMixin, db.Model):
 
     def generate_auth_token(self, expiration=3600):
         s = Serializer(current_app.config['SECRET_KEY'], expiration)
-        self.token_create = datetime.utcnow()
-        db.session.add(self)
-        db.session.commit()
-        return s.dumps({
-            'id': self.id,
-            'timestamp': self.token_timestamp
-        }).decode('utf-8')
+        return s.dumps({'id': self.id}).decode('utf-8')
 
     @staticmethod
     def verify_auth_token(token):
@@ -406,10 +395,8 @@ class User(UserMixin, db.Model):
         try:
             data = s.loads(token.encode('utf-8'))
             user = User.query.get(data['id'])
-            assert data.get('timestamp') == user.token_timestamp
             return user
-        except Exception as e:
-            print(e)
+        except:
             return None
 
     def dumps(self):

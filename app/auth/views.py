@@ -1,7 +1,7 @@
 # -*- coding: utf-8 -*-
 
 from flask import render_template, redirect, request, url_for, flash, \
-    jsonify, session
+    jsonify
 from flask_login import login_user, logout_user, login_required, current_user
 from . import auth
 from .. import db
@@ -19,11 +19,6 @@ def before_request():
                 and request.blueprint != 'auth' \
                 and request.endpoint != 'static':
             return redirect(url_for('auth.unconfirmed'))
-
-    if current_user.is_authenticated \
-            and current_user.confirmed \
-            and request.blueprint != 'api':
-        session['token'] = current_user.generate_auth_token()
 
 
 @auth.route('/ping')

@@ -1,6 +1,6 @@
 # -*- coding: utf-8 -*-
 
-from flask import render_template, flash
+from flask import render_template
 from flask_login import login_required
 from . import main
 
