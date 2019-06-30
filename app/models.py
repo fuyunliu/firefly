@@ -3,9 +3,10 @@
 import hashlib
 from datetime import datetime
 from functools import partial
-from itsdangerous import TimedJSONWebSignatureSerializer as Serializer
+from itsdangerous import TimedJSONWebSignatureSerializer as Serializer, \
+    SignatureExpired
 from werkzeug.security import generate_password_hash, check_password_hash
-from flask import current_app, url_for, g
+from flask import current_app, url_for, g, request
 from flask_login import UserMixin, AnonymousUserMixin, current_user
 from . import db, login_manager, timesince
 
@@ -395,6 +396,14 @@ class User(UserMixin, db.Model):
         try:
             data = s.loads(token.encode('utf-8'))
             user = User.query.get(data['id'])
+            return user
+        except SignatureExpired as e:
+            if request.endpoint != 'api.create_token':
+                return None
+            t = e.date_signed + current_app.config['PERMANENT_SESSION_LIFETIME']
+            if int(t.timestamp()) < s.now():
+                return None
+            user = User.query.get(e.payload['id'])
             return user
         except:
             return None

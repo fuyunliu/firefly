@@ -1,7 +1,7 @@
 # -*- coding: utf-8 -*-
 
 import json
-from flask import Blueprint, g, jsonify
+from flask import Blueprint, g, jsonify, request
 from flask_httpauth import HTTPTokenAuth
 from .users import UserAPI, UserPostAPI, UserTweetAPI, UserCommentAPI, \
     UserFavoriteAPI, UserLikeAPI, UserCollectAPI
@@ -18,6 +18,7 @@ auth = HTTPTokenAuth()
 @auth.verify_token
 def verify_token(token):
     g.current_user = User.verify_auth_token(token)
+    # g.current_user = User.query.get(504)
     return g.current_user is not None
 
 
@@ -42,9 +43,11 @@ def after_request(response):
     return response
 
 
-@api.route('/tokens', methods=['POST'])
+@api.route('/tokens', methods=['GET', 'POST'])
 def create_token():
-    return 'ok'
+    print(request.blueprint)
+    print(request.endpoint)
+    return jsonify({})
 
 
 user_view = UserAPI.as_view('users')

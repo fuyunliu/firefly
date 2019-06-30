@@ -1,4 +1,3 @@
-// import axios from 'axios'
 
 // 通用设置
 axios.defaults.baseURL = 'http://127.0.0.1:5000/api'
@@ -16,14 +15,44 @@ axios.interceptors.request.use(
 )
 
 // 响应拦截器
-axios.interceptors.response.use(
+const resInter = axios.interceptors.response.use(
     response => {
         localStorage.setItem('token', response.data['token'])
         return response
     }, error => {
+        // console.log(error.config)
+        // console.log(error.response)
+        // console.log(error.request)
+
+        switch (error.response.status) {
+            case 401:
+                // axios.interceptors.response.eject(resInter)
+
+                const refreshCall = getNewToken(error)
+
+                const id = axios.interceptors.request.use(
+                    config => refreshCall.then(() => config)
+                )
+
+                return refreshCall.then(() => {
+                    return axios.request(error.config)
+                }).catch(error => {
+                    return Promise.reject(error)
+                }).finally(() => {
+                    axios.interceptors.request.eject(id)
+                    // axios.interceptors.response.use(resInter)
+                })
+
+        }
         return Promise.reject(error)
     }
 )
+
+const getNewToken = error => axios.post('/tokens').then(res => {
+    localStorage.setItem('token', res.data['token'])
+    error.config.headers.Authorization = 'Bearer ' + res.data['token']
+    return Promise.resolve()
+})
 
 const emailValidator = {
     identifier: 'email',
@@ -107,10 +136,10 @@ function initFeedPosts() {
     lc.innerHTML = ""
     axios.get('/posts').then(
         res => {
-            res['data']['posts'].map(p => createPostCard(p)).map(
+            res.data['posts'].map(p => createPostCard(p)).map(
                 html => lc.insertAdjacentHTML('beforeend', html)
             )
-            localStorage.setItem('posts:next', res['data']['next'])
+            localStorage.setItem('posts:next', res.data['next'])
             let sc = document.getElementsByClassName('showComment')
             Array.from(sc, e => e.addEventListener('click', showComment))
         }
@@ -125,10 +154,10 @@ function getFeedPosts() {
     let lc = document.getElementById('ListContent')
     axios.get(next).then(
         res => {
-            res['data']['posts'].map(p => createPostCard(p)).map(
+            res.data['posts'].map(p => createPostCard(p)).map(
                 html => lc.insertAdjacentHTML('beforeend', html)
             )
-            localStorage.setItem('posts:next', res['data']['next'])
+            localStorage.setItem('posts:next', res.data['next'])
             let sc = document.getElementsByClassName('showComment')
             Array.from(sc, e => e.addEventListener('click', showComment))
         }
