@@ -262,7 +262,8 @@ class User(UserMixin, db.Model):
     def gravatar(self, size=100, default='identicon', rating='g'):
         url = "https://secure.gravatar.com/avatar"
         hash = self.avatar_hash or self.gravatar_hash()
-        return f'{url}/{hash}?s={size}&d={default}&r={rating}'
+        # return f'{url}/{hash}?s={size}&d={default}&r={rating}'
+        return url_for('static', filename='images/user.jpg')
 
     def follow(self, user):
         if not self.is_following(user):
@@ -413,10 +414,12 @@ class User(UserMixin, db.Model):
             'id': self.id,
             'email': self.email,
             'username': self.username,
-            'avatar': self.gravatar(size=18),
+            # 'avatar': self.gravatar(size=18),
+            'avatar': url_for('static', filename='images/user.jpg'),
             'member_since': self.member_since.year,
             'last_seen': timesince(self.last_seen),
-            'url': url_for('api.users', user_id=self.id, _external=True)
+            'url': url_for('api.users', user_id=self.id, _external=True),
+            'bio': url_for('auth.user', username=self.username, _external=True)
         }
         return user
 
@@ -587,9 +590,11 @@ class Tweet(db.Model):
         }
         user = get_current_user()
         if user is not None:
-            css = {'heart': 'heart'}
+            css = {'like': 'like', 'star': 'star'}
             if user.is_like_tweet(self):
-                css['heart'] = 'red heart'
+                css['like'] = 'red like'
+            if user.is_collect_tweet(self):
+                css['star'] = 'yellow star'
             data['css'] = css
         return data
 
@@ -651,6 +656,12 @@ class Comment(db.Model):
                 'id': self.parent_id,
                 'author': self.parent.author.dumps(),
             }
+        user = get_current_user()
+        if user is not None:
+            css = {'like': 'like'}
+            if user.is_like_comment(self):
+                css['like'] = 'red like'
+            data['css'] = css
         return data
 
     @staticmethod

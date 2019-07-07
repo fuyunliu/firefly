@@ -4,8 +4,8 @@
 {% block content %}
 <div class="ui segment">
 <div class="ui secondary pointing menu">
-    <a class="item active" id="allPosts">All</a>
-    <a class="item" id="followingPosts">Following</a>
+    <a class="item active" id="allPosts">Posts</a>
+    <a class="item" id="allTweets">Tweets</a>
     <a class="item" id="hotPosts">Hot</a>
     <div class="right item">
     <div class="ui pointing dropdown">
@@ -22,47 +22,7 @@
 <div class="text" id="ListContent"></div>
 </div>
 
-
-<div class="ui modal">
-    <div class="header">
-      Profile Picture
-    </div>
-    <div class="scrolling content">
-        <p>This is an example of expanded content that will cause the modal's dimmer to scroll</p>
-        <p>This is an example of expanded content that will cause the modal's dimmer to scroll</p>
-        <p>This is an example of expanded content that will cause the modal's dimmer to scroll</p>
-        <p>This is an example of expanded content that will cause the modal's dimmer to scroll</p>
-        <p>This is an example of expanded content that will cause the modal's dimmer to scroll</p>
-        <p>This is an example of expanded content that will cause the modal's dimmer to scroll</p>
-        <p>This is an example of expanded content that will cause the modal's dimmer to scroll</p>
-        <p>This is an example of expanded content that will cause the modal's dimmer to scroll</p>
-        <p>This is an example of expanded content that will cause the modal's dimmer to scroll</p>
-        <p>This is an example of expanded content that will cause the modal's dimmer to scroll</p>
-        <p>This is an example of expanded content that will cause the modal's dimmer to scroll</p>
-        <p>This is an example of expanded content that will cause the modal's dimmer to scroll</p>
-        <p>This is an example of expanded content that will cause the modal's dimmer to scroll</p>
-        <p>This is an example of expanded content that will cause the modal's dimmer to scroll</p>
-        <p>This is an example of expanded content that will cause the modal's dimmer to scroll</p>
-        <p>This is an example of expanded content that will cause the modal's dimmer to scroll</p>
-        <p>This is an example of expanded content that will cause the modal's dimmer to scroll</p>
-        <p>This is an example of expanded content that will cause the modal's dimmer to scroll</p>
-        <p>This is an example of expanded content that will cause the modal's dimmer to scroll</p>
-        <p>This is an example of expanded content that will cause the modal's dimmer to scroll</p>
-        <p>This is an example of expanded content that will cause the modal's dimmer to scroll</p>
-        <p>This is an example of expanded content that will cause the modal's dimmer to scroll</p>
-        <p>This is an example of expanded content that will cause the modal's dimmer to scroll</p>
-        <p>This is an example of expanded content that will cause the modal's dimmer to scroll</p>
-        <p>This is an example of expanded content that will cause the modal's dimmer to scroll</p>
-        <p>This is an example of expanded content that will cause the modal's dimmer to scroll</p>
-    </div>
-    <div class="actions">
-      <div class="ui primary approve button">
-        Proceed
-        <i class="right chevron icon"></i>
-      </div>
-    </div>
-  </div>
-
+{% include "_modals.html" %}
 
 {% endblock %}
 
@@ -70,12 +30,11 @@
 {{super()}}
 <script>
 let all_posts = document.getElementById('allPosts')
-let following_posts = document.getElementById('followingPosts')
+let all_tweets = document.getElementById('allTweets')
 let hot_posts = document.getElementById('hotPosts')
 all_posts.addEventListener('click', initFeedPosts)
-following_posts.addEventListener('click', initFollowingPosts)
+all_tweets.addEventListener('click', initFeedTweets)
 hot_posts.addEventListener('click', initHotPosts)
 document.addEventListener('DOMContentLoaded', initFeedPosts)
-window.addEventListener('scroll', _.throttle(getFeedPosts, 300))
 </script>
 {% endblock %}

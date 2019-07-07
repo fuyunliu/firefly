@@ -16,7 +16,10 @@
 .ui.card.noBorderCard > .content {
     border-top: none !important;
 }
-
 .iconItem {
     min-width: 80px;
+}
+.ui.comments .comment {
+    margin-top: 1em;
+    padding-top: 1em;
 }

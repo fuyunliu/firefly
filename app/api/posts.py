@@ -58,7 +58,7 @@ class PostCommentAPI(MethodView):
 
     def get(self, post_id):
         post = Post.query.get_or_404(post_id)
-        page = request.args.get('page', 1, type=int)
+        page = request.args.get('page', 11, type=int)
         pagination = post.comments.paginate(
             page,
             per_page=current_app.config['FIREFLY_PER_PAGE_SIZE'],

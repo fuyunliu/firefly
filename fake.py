@@ -82,13 +82,40 @@ def tweets(count=100):
     db.session.commit()
 
 
+def replies():
+    fake = Faker()
+    post = Post.query.get(200)
+    tweet = Tweet.query.get(100)
+    user_count = User.query.count()
+    for c in post.comments.all():
+        user = User.query.offset(randint(0, user_count - 1)).first()
+        comment = Comment(
+            body=fake.sentence(),
+            post=post,
+            author=user,
+            parent=c
+        )
+        db.session.add(comment)
+    for c in tweet.comments.all():
+        user = User.query.offset(randint(0, user_count - 1)).first()
+        comment = Comment(
+            body=fake.sentence(),
+            tweet=tweet,
+            author=user,
+            parent=c
+        )
+        db.session.add(comment)
+    db.session.commit()
+
+
 def run():
     app = create_app('default')
     with app.app_context():
         # users(100)
         # posts(100)
-        comments(100)
+        # comments(100)
         # tweets(100)
+        replies()
 
 
 if __name__ == "__main__":

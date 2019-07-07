@@ -29,9 +29,12 @@
             </div>
             <div class="extra">
             <div class="ui blue basic label">{{user.email}}</div>
-            <a class="ui right floated inverted blue button" href="{{url_for('auth.edit')}}">
-                Edit Profile
-            </a>
+            {% if user.id == current_user.id %}
+            <a class="ui right floated inverted blue button"href="{{url_for('auth.edit')}}">Edit</a>
+            {% else %}
+            <a class="ui right floated inverted blue button" href="">Chat</a>
+            <a class="ui right floated inverted blue button" href="">Follow</a>
+            {% endif %}
             </div>
         </div>
     </div>

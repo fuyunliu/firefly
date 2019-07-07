@@ -1,6 +1,5 @@
 <!DOCTYPE html>
 <html><head>
-
     <!-- Standard Meta -->
     {% block meta %}
     <meta charset="utf-8">
@@ -68,10 +67,7 @@
     </div>
 
     {% block script %}
-    <script
-    src="https://code.jquery.com/jquery-3.1.1.min.js"
-    integrity="sha256-hVVnYaiADRTO2PzUGmuLJr8BLUSjGIZsDYGmIJLv2b8="
-    crossorigin="anonymous"></script>
+    <script src="https://cdn.bootcss.com/jquery/3.4.1/jquery.min.js"></script>
     <script src="{{url_for('static', filename='semantic.min.js')}}"></script>
     <script src="{{url_for('static', filename='lodash.min.js')}}"></script>
     <script src="{{url_for('static', filename='axios.min.js')}}"></script>

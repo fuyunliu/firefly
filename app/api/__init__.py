@@ -1,12 +1,12 @@
 # -*- coding: utf-8 -*-
 
 import json
-from flask import Blueprint, g, jsonify, request
+from flask import Blueprint, g, jsonify
 from flask_httpauth import HTTPTokenAuth
 from .users import UserAPI, UserPostAPI, UserTweetAPI, UserCommentAPI, \
     UserFavoriteAPI, UserLikeAPI, UserCollectAPI
 from .posts import PostAPI, PostCommentAPI, PostLikeAPI, PostCollectAPI
-from .tweets import TweetAPI
+from .tweets import TweetAPI, TweetCommentAPI, TweetLikeAPI, TweetCollectAPI
 from .comments import CommentAPI
 from .errors import unauthorized, forbidden
 from ..models import User
@@ -18,7 +18,6 @@ auth = HTTPTokenAuth()
 @auth.verify_token
 def verify_token(token):
     g.current_user = User.verify_auth_token(token)
-    # g.current_user = User.query.get(504)
     return g.current_user is not None
 
 
@@ -43,10 +42,8 @@ def after_request(response):
     return response
 
 
-@api.route('/tokens', methods=['GET', 'POST'])
+@api.route('/tokens', methods=['POST'])
 def create_token():
-    print(request.blueprint)
-    print(request.endpoint)
     return jsonify({})
 
 
@@ -117,6 +114,21 @@ api.add_url_rule(
 api.add_url_rule(
     rule='/posts/<int:post_id>/collects',
     view_func=PostCollectAPI.as_view('post_collect'),
+    methods=['POST', 'DELETE']
+)
+api.add_url_rule(
+    rule='/tweets/<int:tweet_id>/comments',
+    view_func=TweetCommentAPI.as_view('tweet_comment'),
+    methods=['GET', 'POST']
+)
+api.add_url_rule(
+    rule='/tweets/<int:tweet_id>/likes',
+    view_func=TweetLikeAPI.as_view('tweet_like'),
+    methods=['POST', 'DELETE']
+)
+api.add_url_rule(
+    rule='/tweets/<int:tweet_id>/collects',
+    view_func=TweetCollectAPI.as_view('tweet_collect'),
     methods=['POST', 'DELETE']
 )
 api.add_url_rule(
