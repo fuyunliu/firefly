@@ -84,8 +84,8 @@ def tweets(count=100):
 
 def replies():
     fake = Faker()
-    post = Post.query.get(200)
-    tweet = Tweet.query.get(100)
+    post = Post.query.get(1)
+    tweet = Tweet.query.get(1)
     user_count = User.query.count()
     for c in post.comments.all():
         user = User.query.offset(randint(0, user_count - 1)).first()
@@ -113,9 +113,9 @@ def run():
     with app.app_context():
         # users(100)
         # posts(100)
-        # comments(100)
+        comments(100)
         # tweets(100)
-        replies()
+        # replies()
 
 
 if __name__ == "__main__":

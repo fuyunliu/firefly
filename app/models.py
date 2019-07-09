@@ -1,6 +1,7 @@
 # -*- coding: utf-8 -*-
 
 import hashlib
+import urllib.parse as urlparse
 from datetime import datetime
 from functools import partial
 from itsdangerous import TimedJSONWebSignatureSerializer as Serializer, \
@@ -259,11 +260,15 @@ class User(UserMixin, db.Model):
     def gravatar_hash(self):
         return hashlib.md5(self.email.lower().encode('utf-8')).hexdigest()
 
-    def gravatar(self, size=100, default='identicon', rating='g'):
+    def gravatar(self, size=80):
         url = "https://secure.gravatar.com/avatar"
         hash = self.avatar_hash or self.gravatar_hash()
-        # return f'{url}/{hash}?s={size}&d={default}&r={rating}'
-        return url_for('static', filename='images/user.jpg')
+        query = {
+            's': size,
+            'd': url_for('static', filename='images/user.jpg', _external=True),
+            'r': 'g'
+        }
+        return f'{url}/{hash}?{urlparse.urlencode(query)}'
 
     def follow(self, user):
         if not self.is_following(user):
