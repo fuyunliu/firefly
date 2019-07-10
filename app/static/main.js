@@ -15,18 +15,14 @@ axios.interceptors.request.use(
 )
 
 // 响应拦截器
-const resInter = axios.interceptors.response.use(
+axios.interceptors.response.use(
     response => {
         localStorage.setItem('token', response.data['token'])
         return response
     }, error => {
-        // console.log(error.config)
-        // console.log(error.response)
-        // console.log(error.request)
-
         switch (error.response.status) {
             case 401:
-                // axios.interceptors.response.eject(resInter)
+                // axios.interceptors.response.eject(resInterceptor)
 
                 const refreshCall = getNewToken(error)
 
@@ -40,7 +36,7 @@ const resInter = axios.interceptors.response.use(
                     return Promise.reject(error)
                 }).finally(() => {
                     axios.interceptors.request.eject(id)
-                    // axios.interceptors.response.use(resInter)
+                    // axios.interceptors.response.use(resInterceptor)
                 })
 
         }
@@ -120,23 +116,10 @@ function initBase() {
     validateForm()
 }
 
-const isInViewPoint = ele => {
-	const scroll = window.scrollY || window.pageYOffset
-	const boundsTop = ele.getBoundingClientRect().top + scroll
-
-	const viewport = {
-		top: scroll,
-		bottom: scroll + window.innerHeight
-	}
-
-    const bounds = {
-		top: boundsTop,
-		bottom: boundsTop + ele.clientHeight
-	}
-
-	return (bounds.bottom >= viewport.top && bounds.bottom <= viewport.bottom)
-		|| (bounds.top <= viewport.bottom && bounds.top >= viewport.top)
+const getScrollFactor = (eid) => {
+    return document.getElementById(eid).childElementCount / 20
 }
+
 
 function editProfile() {
     let inputs = this.closest('.ui.form').getElementsByTagName('input')
@@ -150,7 +133,7 @@ function editProfile() {
 }
 
 function getFeedPosts() {
-    const down = window.pageYOffset + window.innerHeight >= document.documentElement.scrollHeight - 200
+    const down = window.pageYOffset + window.innerHeight >= document.documentElement.scrollHeight - 200 * getScrollFactor('ListContent')
     if (!down) {return}
     const next = localStorage.getItem('posts:next')
     if (next == 'null') {return}
@@ -168,7 +151,7 @@ function getFeedPosts() {
 }
 
 function getFeedTweets() {
-    const down = window.pageYOffset + window.innerHeight >= document.documentElement.scrollHeight - 200
+    const down = window.pageYOffset + window.innerHeight >= document.documentElement.scrollHeight - 200 * getScrollFactor('ListContent')
     if (!down) {return}
     const next = localStorage.getItem('tweets:next')
     if (next == 'null') {return}
@@ -186,21 +169,11 @@ function getFeedTweets() {
 }
 
 function getFeedComments() {
-    let lc = document.getElementById('ListComment')
-    let modal = document.querySelector('div.ui.modal')
-    if (lc.lastElementChild === null || modal.classList.contains('hidden')) {
-        alert('aaa')
-        window.removeEventListener('scroll', scrollComment)
-        return
-    }
-    if (!isInViewPoint(lc.lastElementChild)) {
-        alert('bbb')
-        return
-    }
+    const down = this.scrollTop + this.clientHeight >= this.scrollHeight - 200 * getScrollFactor('ListComment')
+    if (!down) {return}
     const next = localStorage.getItem('comments:next')
-    if (next == 'null') {
-        alert('ccc')
-    }
+    if (next == 'null') {return}
+    let lc = document.getElementById('ListComment')
     axios.get(next).then(
         res => {
             res.data['comments'].map(c => createCommentCard(c)).map(
@@ -211,10 +184,19 @@ function getFeedComments() {
     )
 }
 
-
 const scrollPost = _.throttle(getFeedPosts, 300)
 const scrollTweet = _.throttle(getFeedTweets, 300)
 const scrollComment = _.throttle(getFeedComments, 300)
+
+function addCommentListener() {
+    let sc = document.getElementById('ScrollContent')
+    sc.addEventListener('scroll', scrollComment)
+}
+
+function removeCommentListener() {
+    let sc = document.getElementById('ScrollContent')
+    sc.removeEventListener('scroll', scrollComment)
+}
 
 function initFeedPosts() {
     window.removeEventListener('scroll', scrollTweet)
@@ -259,8 +241,11 @@ function getHotPosts() {
 
 }
 
+function ping() {
+    alert('aaa')
+}
+
 function initComments() {
-    // window.addEventListener('scroll', scrollComment)
     let mt = document.getElementById('ModalTitle')
     let lc = document.getElementById('ListComment')
     let card = this.closest('.ui.card')
@@ -274,11 +259,14 @@ function initComments() {
                 html => lc.insertAdjacentHTML('beforeend', html)
             )
             localStorage.setItem('comments:next', res.data['next'])
+            $('.ui.small.modal').modal({
+                onShow: addCommentListener,
+                onHidden: removeCommentListener
+            })
             $('.ui.small.modal').modal('show')
         }
     )
 }
-
 
 const createPostCard = (post) => `
 <div class="ui fluid card noBorderCard" item-id="${post.id}" item-md="posts">

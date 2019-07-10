@@ -166,7 +166,7 @@ class User(UserMixin, db.Model):
     def __init__(self, **kwargs):
         super().__init__(**kwargs)
         if self.role is None:
-            if self.email == current_app.config['FIREFLY_ADMIN']:
+            if self.email == current_app.config['MAIL_ADMIN']:
                 self.role = Role.query.filter_by(name='Administrator').first()
             if self.role is None:
                 self.role = Role.query.filter_by(default=True).first()
@@ -261,11 +261,12 @@ class User(UserMixin, db.Model):
         return hashlib.md5(self.email.lower().encode('utf-8')).hexdigest()
 
     def gravatar(self, size=80):
+        return url_for('static', filename='images/user.jpg', _external=True)
         url = "https://secure.gravatar.com/avatar"
         hash = self.avatar_hash or self.gravatar_hash()
         query = {
             's': size,
-            'd': url_for('static', filename='images/user.jpg', _external=True),
+            'd': current_app.config['DEFAULT_USER_AVATAR'],
             'r': 'g'
         }
         return f'{url}/{hash}?{urlparse.urlencode(query)}'
@@ -419,8 +420,7 @@ class User(UserMixin, db.Model):
             'id': self.id,
             'email': self.email,
             'username': self.username,
-            # 'avatar': self.gravatar(size=18),
-            'avatar': url_for('static', filename='images/user.jpg'),
+            'avatar': self.gravatar(size=18),
             'member_since': self.member_since.year,
             'last_seen': timesince(self.last_seen),
             'url': url_for('api.users', user_id=self.id, _external=True),

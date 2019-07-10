@@ -20,7 +20,7 @@ class Config:
     MAIL_PASSWORD = 'zaq1xsw2'
     MAIL_SENDER = 'Firefly Admin <fuyunliux@163.com>'
     MAIL_SUBJECT_PREFIX = '[Firefly]'
-    FIREFLY_ADMIN = 'fuyunliux@163.com'
+    MAIL_ADMIN = 'fuyunliux@163.com'
 
     # database
     SQLALCHEMY_TRACK_MODIFICATIONS = False
@@ -31,8 +31,10 @@ class Config:
     CELERY_RESULT_BACKEND = 'redis://localhost:6379/0'
     CELERY_ACCEPT_CONTENT = ['pickle', 'json']
 
-    # page content
-    FIREFLY_PER_PAGE_SIZE = 10
+    # common settings
+    PER_PAGE_SIZE = 10
+    DEFAULT_USER_AVATAR = ("https://wx4.sinaimg.cn/orj360/"
+                           "0066oo9Jly1g4uykx25gqj301e01e3ye.jpg")
 
     @staticmethod
     def init_app(app):

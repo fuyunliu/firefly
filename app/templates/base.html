@@ -23,26 +23,33 @@
     <div class="ui large borderless menu">
         <div class="ui container">
         <a class="active item" href="{{url_for('main.index')}}">Home</a>
-        <a class="item">Work</a>
-        <a class="item">Company</a>
-        <a class="item">Careers</a>
+        <a class="item">Explore</a>
+        <a class="item">Toics</a>
+        <a class="item">More</a>
         <div class="item">
         <div class="ui icon input">
             <input type="text" placeholder="Search...">
             <i class="search link icon"></i>
         </div>
         </div>
-        <div class="right item">
-        <div class="ui inline pointing dropdown">
+        <div class="right menu">
+        <div class="item">
+            <a class="ui basic black button menuButton" href="">
+                <i class="edit icon"></i>Post
+            </a>
+            <a class="ui basic blue button" href="">
+                <i class="lightbulb icon"></i>Tweet
+            </a>
+        </div>
+        <div class="ui inline pointing dropdown item">
             <img class="ui avatar image"
             src="{{current_user.gravatar(size=18)}}">
             <span>{{current_user.username}}</span>
             <div class="menu">
-                <a class="item"
-                href="{{url_for('auth.user', username=current_user.username)}}"><i class="user icon"></i>Profile</a>
-                <div class="item">aaa</div>
-                <div class="item">aaa</div>
-                <div class="item">aaa</div>
+                <a class="item" href="{{url_for('auth.user', username=current_user.username)}}"><i class="user icon"></i>Profile</a>
+                <a class="item"><div class="ui teal label">10</div>Inbox</a>
+                <a class="item"><div class="ui yellow label">20</div>Spam</a>
+                <a class="item"><div class="ui pink label">30</div>Message</a>
                 <a class="item" href="{{url_for('auth.logout')}}"><i class="power off icon"></i>Log Out</a>
             </div>
         </div>

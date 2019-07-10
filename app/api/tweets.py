@@ -13,7 +13,7 @@ class TweetAPI(MethodView):
             tweet = Tweet.query.get_or_404(tweet_id)
             return jsonify(tweet.dumps())
 
-        size = current_app.config['FIREFLY_PER_PAGE_SIZE']
+        size = current_app.config['PER_PAGE_SIZE']
         max_id = request.args.get('max_id', None, type=int)
         if max_id is None:
             items = Tweet.query.order_by(Tweet.id.desc()).limit(size)
@@ -49,7 +49,7 @@ class TweetCommentAPI(MethodView):
         page = request.args.get('page', 1, type=int)
         pagination = tweet.comments.paginate(
             page,
-            per_page=current_app.config['FIREFLY_PER_PAGE_SIZE'],
+            per_page=current_app.config['PER_PAGE_SIZE'],
             error_out=False)
         prev = None
         if pagination.has_prev:

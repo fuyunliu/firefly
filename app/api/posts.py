@@ -14,7 +14,7 @@ class PostAPI(MethodView):
             post = Post.query.get_or_404(post_id)
             return jsonify(post.dumps())
 
-        size = current_app.config['FIREFLY_PER_PAGE_SIZE']
+        size = current_app.config['PER_PAGE_SIZE']
         max_id = request.args.get('max_id', None, type=int)
         if max_id is None:
             items = Post.query.order_by(Post.id.desc()).limit(size)
@@ -58,10 +58,10 @@ class PostCommentAPI(MethodView):
 
     def get(self, post_id):
         post = Post.query.get_or_404(post_id)
-        page = request.args.get('page', 11, type=int)
+        page = request.args.get('page', 1, type=int)
         pagination = post.comments.paginate(
             page,
-            per_page=current_app.config['FIREFLY_PER_PAGE_SIZE'],
+            per_page=current_app.config['PER_PAGE_SIZE'],
             error_out=False)
         prev = None
         if pagination.has_prev:

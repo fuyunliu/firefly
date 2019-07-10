@@ -18,7 +18,7 @@ class UserAPI(MethodView):
         page = request.args.get('page', 1, type=int)
         pagination = User.query.paginate(
             page,
-            per_page=current_app.config['FIREFLY_PER_PAGE_SIZE'],
+            per_page=current_app.config['PER_PAGE_SIZE'],
             error_out=False)
         prev = None
         if pagination.has_prev:
@@ -67,7 +67,7 @@ class UserPostAPI(MethodView):
         page = request.args.get('page', 1, type=int)
         pagination = user.posts.paginate(
             page,
-            per_page=current_app.config['FIREFLY_PER_PAGE_SIZE'],
+            per_page=current_app.config['PER_PAGE_SIZE'],
             error_out=False)
         prev = None
         if pagination.has_prev:
@@ -96,7 +96,7 @@ class UserTweetAPI(MethodView):
         page = request.args.get('page', 1, type=int)
         pagination = user.tweets.paginate(
             page,
-            per_page=current_app.config['FIREFLY_PER_PAGE_SIZE'],
+            per_page=current_app.config['PER_PAGE_SIZE'],
             error_out=False)
         prev = None
         if pagination.has_prev:
@@ -125,7 +125,7 @@ class UserCommentAPI(MethodView):
         page = request.args.get('page', 1, type=int)
         pagination = user.comments.paginate(
             page,
-            per_page=current_app.config['FIREFLY_PER_PAGE_SIZE'],
+            per_page=current_app.config['PER_PAGE_SIZE'],
             error_out=False)
         prev = None
         if pagination.has_prev:
@@ -154,7 +154,7 @@ class UserFavoriteAPI(MethodView):
         page = request.args.get('page', 1, type=int)
         pagination = user.favorites.paginate(
             page,
-            per_page=current_app.config['FIREFLY_PER_PAGE_SIZE'],
+            per_page=current_app.config['PER_PAGE_SIZE'],
             error_out=False)
         prev = None
         if pagination.has_prev:
@@ -189,7 +189,7 @@ class UserLikeAPI(MethodView):
         }
         pagination = bq[type].paginate(
             page,
-            per_page=current_app.config['FIREFLY_PER_PAGE_SIZE'],
+            per_page=current_app.config['PER_PAGE_SIZE'],
             error_out=False)
         prev = None
         if pagination.has_prev:
@@ -220,7 +220,7 @@ class UserCollectAPI(MethodView):
         page = request.args.get('page', 1, type=int)
         pagination = user.collected_posts.paginate(
             page,
-            per_page=current_app.config['FIREFLY_PER_PAGE_SIZE'],
+            per_page=current_app.config['PER_PAGE_SIZE'],
             error_out=False)
         prev = None
         if pagination.has_prev:
