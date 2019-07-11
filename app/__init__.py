@@ -30,6 +30,7 @@ def timesince(dt):
 def create_app(config_name):
     app = Flask(__name__)
     app.jinja_env.auto_reload = True  # 静态资源修改不更新问题
+    app.jinja_env.trim_blocks = True
     app.jinja_env.filters['timesince'] = timesince
     app.config.from_object(config[config_name])
     config[config_name].init_app(app)

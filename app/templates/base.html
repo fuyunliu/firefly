@@ -15,8 +15,8 @@
     <link rel="stylesheet" href="{{url_for('static', filename='main.css')}}">
     {% endblock %}
 
-  </head>
-  <body class="pushable">
+</head>
+<body class="pushable">
     <div class="pusher">
 
     {% block navbar %}
@@ -58,14 +58,6 @@
     </div>
     {% endblock %}
 
-    <!-- Flash Messages -->
-    {% for category, message in get_flashed_messages(with_categories=True) %}
-    <div class="ui {{category}} message">
-        <i class="close icon"></i>
-        <p>{{message}}</p>
-    </div>
-    {% endfor %}
-
     <div class="ui container pusherContent">
         {% block content %}
         {% endblock %}
@@ -88,7 +80,15 @@
     </script>
     {% endif %}
     <script>
-        initBase()
+    initBaseComponents()
+    {% for category, message in get_flashed_messages(with_categories=True) %}
+    $('body').toast({
+        displayTime: 0,
+        closeIcon: true,
+        class: "{{category|replace('message', 'info')}}",
+        message: "{{message}}"
+      })
+    {% endfor %}
     </script>
 
     {% endblock %}

@@ -108,7 +108,7 @@ function validateForm() {
     })
 }
 
-function initBase() {
+function initBaseComponents() {
     closeMessage()
     dimmerCard()
     dropdownMenu()
