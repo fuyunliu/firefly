@@ -9,3 +9,9 @@ from . import main
 @login_required
 def index():
     return render_template('index.html')
+
+
+@main.route('/write')
+@login_required
+def write():
+    return render_template('write.html')

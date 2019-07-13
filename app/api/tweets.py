@@ -81,11 +81,19 @@ class TweetLikeAPI(MethodView):
         tweet = Tweet.query.get_or_404(tweet_id)
         g.current_user.like_tweet(tweet)
         db.session.commit()
+        return jsonify({
+            'method': 'delete',
+            'count': tweet.like_count
+        })
 
     def delete(self, tweet_id):
         tweet = Tweet.query.get_or_404(tweet_id)
         g.current_user.dislike_tweet(tweet)
         db.session.commit()
+        return jsonify({
+            'method': 'post',
+            'count': tweet.like_count
+        })
 
 
 class TweetCollectAPI(MethodView):
@@ -94,8 +102,16 @@ class TweetCollectAPI(MethodView):
         tweet = Tweet.query.get_or_404(tweet_id)
         g.current_user.collect_tweet(tweet)
         db.session.commit()
+        return jsonify({
+            'method': 'delete',
+            'count': tweet.collect_count
+        })
 
     def delete(self, tweet_id):
         tweet = Tweet.query.get_or_404(tweet_id)
         g.current_user.discollect_tweet(tweet)
         db.session.commit()
+        return jsonify({
+            'method': 'post',
+            'count': tweet.collect_count
+        })

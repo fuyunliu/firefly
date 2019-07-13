@@ -93,11 +93,19 @@ class PostLikeAPI(MethodView):
         post = Post.query.get_or_404(post_id)
         g.current_user.like_post(post)
         db.session.commit()
+        return jsonify({
+            'method': 'delete',
+            'count': post.like_count
+        })
 
     def delete(self, post_id):
         post = Post.query.get_or_404(post_id)
         g.current_user.dislike_post(post)
         db.session.commit()
+        return jsonify({
+            'method': 'post',
+            'count': post.like_count
+        })
 
 
 class PostCollectAPI(MethodView):
@@ -106,8 +114,16 @@ class PostCollectAPI(MethodView):
         post = Post.query.get_or_404(post_id)
         g.current_user.collect_post(post)
         db.session.commit()
+        return jsonify({
+            'method': 'delete',
+            'count': post.collect_count
+        })
 
     def delete(self, post_id):
         post = Post.query.get_or_404(post_id)
         g.current_user.discollect_post(post)
         db.session.commit()
+        return jsonify({
+            'method': 'post',
+            'count': post.collect_count
+        })

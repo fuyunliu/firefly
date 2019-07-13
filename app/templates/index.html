@@ -2,6 +2,8 @@
 {% block title%}Homepage - Firefly{% endblock %}
 
 {% block content %}
+<div class="ui grid">
+<div class="ui eleven wide column">
 <div class="ui segment">
 <div class="ui secondary pointing menu">
     <a class="item active" id="allPosts">Posts</a>
@@ -21,6 +23,13 @@
 </div>
 <div class="text" id="ListContent"></div>
 </div>
+</div>
+<div class="five wide column">
+<div class="ui segment">
+    sidebar
+</div>
+</div>
+</div>
 
 {% include "_modals.html" %}
 
@@ -31,10 +40,8 @@
 <script>
 let all_posts = document.getElementById('allPosts')
 let all_tweets = document.getElementById('allTweets')
-let hot_posts = document.getElementById('hotPosts')
 all_posts.addEventListener('click', initFeedPosts)
 all_tweets.addEventListener('click', initFeedTweets)
-hot_posts.addEventListener('click', initHotPosts)
 document.addEventListener('DOMContentLoaded', initFeedPosts)
 </script>
 {% endblock %}

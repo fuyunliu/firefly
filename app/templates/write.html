@@ -1,0 +1,38 @@
+{% extends "base.html" %}
+{% block title%}Write post - Firefly{% endblock %}
+
+{% block navbar %}{% endblock %}
+
+{% block content %}
+
+<div class="ui container">
+    <h1 title="pell">pell</h1>
+    <div id="pellEditor"></div>
+
+    <div>
+    <h3>Text output:</h3>
+    <div id="text-output"></div>
+    </div>
+
+    <div>
+    <h3>HTML output:</h3>
+    <pre id="html-output"></pre>
+    </div>
+
+</div>
+{% endblock %}
+
+{% block script %}
+{{super()}}
+<script src="{{url_for('static', filename='pell.js')}}"></script>
+<script>
+    var editor = window.pell.init({
+    element: document.getElementById('pellEditor'),
+    defaultParagraphSeparator: 'p',
+    onChange: function (html) {
+        document.getElementById('text-output').innerHTML = html
+        document.getElementById('html-output').textContent = html
+    }
+    })
+</script>
+{% endblock %}

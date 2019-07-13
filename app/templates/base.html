@@ -34,10 +34,10 @@
         </div>
         <div class="right menu">
         <div class="item">
-            <a class="ui basic black button menuButton" href="">
+            <a class="ui basic black button menuButton" href="{{url_for('main.write')}}" target="_blank">
                 <i class="edit icon"></i>Post
             </a>
-            <a class="ui basic blue button" href="">
+            <a class="ui basic blue button" href="#">
                 <i class="lightbulb icon"></i>Tweet
             </a>
         </div>
@@ -90,7 +90,6 @@
       })
     {% endfor %}
     </script>
-
     {% endblock %}
 
 </body></html>

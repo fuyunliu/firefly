@@ -16,8 +16,15 @@
 .ui.card.noBorderCard > .content {
     border-top: none !important;
 }
-.iconItem {
+.actionItem {
     min-width: 80px;
+    cursor: pointer;
+}
+span.actionItem.redItem {
+    color: red;
+}
+span.actionItem.yellowItem {
+    color: yellow;
 }
 .ui.comments .comment {
     margin-top: 1em;
@@ -25,4 +32,17 @@
 }
 .ui.menu .menuButton {
     right: 10px;
+}
+#pellEditor .ui.button {
+    box-shadow: unset;
+}
+#pellEditor div[contentEditable=true] {
+    margin-top: 30px;
+}
+#pellEditor div[contentEditable=true]:focus {
+    outline: none;
+}
+#pellEditor div[contentEditable=true]:empty:not(:focus):before{
+    content: "What's on your mind?";
+    color: gray;
 }

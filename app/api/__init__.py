@@ -7,7 +7,7 @@ from .users import UserAPI, UserPostAPI, UserTweetAPI, UserCommentAPI, \
     UserFavoriteAPI, UserLikeAPI, UserCollectAPI
 from .posts import PostAPI, PostCommentAPI, PostLikeAPI, PostCollectAPI
 from .tweets import TweetAPI, TweetCommentAPI, TweetLikeAPI, TweetCollectAPI
-from .comments import CommentAPI
+from .comments import CommentAPI, CommentLikeAPI
 from .errors import unauthorized, forbidden
 from ..models import User
 
@@ -135,6 +135,11 @@ api.add_url_rule(
     rule='/comments/<int:comment_id>',
     view_func=CommentAPI.as_view('comments'),
     methods=['GET', 'DELETE']
+)
+api.add_url_rule(
+    rule='/comments/<int:comment_id>/likes',
+    view_func=CommentLikeAPI.as_view('comment_like'),
+    methods=['POST', 'DELETE']
 )
 api.add_url_rule(
     rule='/users/<int:user_id>/posts',

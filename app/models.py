@@ -374,17 +374,13 @@ class User(UserMixin, db.Model):
     def like_comment(self, comment):
         if not self.is_like_comment(comment):
             lc = UserLikeComment(user=self, comment=comment)
-            comment.like_count += 1
             db.session.add(lc)
-            db.session.add(comment)
 
     def dislike_comment(self, comment):
         lc = UserLikeComment.query.filter_by(user_id=self.id,
                                              comment_id=comment.id).first()
         if lc is not None:
-            comment.like_count -= 1
             db.session.delete(lc)
-            db.session.add(comment)
 
     def is_like_comment(self, comment):
         if comment.id is None:
@@ -416,7 +412,7 @@ class User(UserMixin, db.Model):
             return None
 
     def dumps(self):
-        user = {
+        data = {
             'id': self.id,
             'email': self.email,
             'username': self.username,
@@ -424,9 +420,13 @@ class User(UserMixin, db.Model):
             'member_since': self.member_since.year,
             'last_seen': timesince(self.last_seen),
             'url': url_for('api.users', user_id=self.id, _external=True),
-            'bio': url_for('auth.user', username=self.username, _external=True)
+            'bio': url_for('auth.user', username=self.username, _external=True),
         }
-        return user
+        user = get_current_user()
+        if user is not None:
+            data['is_followed'] = self.is_followed_by(user)
+            data['is_following'] = self.is_following(user)
+        return data
 
     @staticmethod
     def loads(data):
@@ -511,6 +511,18 @@ class Post(db.Model):
         target.abstract = truncate(value, length=64)
         # todo target.body_html
 
+    @property
+    def like_count(self):
+        return query_count(self.liked_users)
+
+    @property
+    def collect_count(self):
+        return query_count(self.collected_users)
+
+    @property
+    def comment_count(self):
+        return query_count(self.comments)
+
     def dumps(self):
         data = {
             'id': self.id,
@@ -519,20 +531,16 @@ class Post(db.Model):
             'body_html': self.body_html,
             'create_time': timesince(self.create_time),
             'update_time': timesince(self.update_time),
-            'like_count': query_count(self.liked_users),
-            'collect_count': query_count(self.collected_users),
-            'comment_count': query_count(self.comments),
+            'like_count': self.like_count,
+            'collect_count': self.collect_count,
+            'comment_count': self.comment_count,
             'url': url_for('api.posts', post_id=self.id, _external=True),
             'author': self.author.dumps()
         }
         user = get_current_user()
         if user is not None:
-            css = {'like': 'like', 'star': 'star'}
-            if user.is_like_post(self):
-                css['like'] = 'red like'
-            if user.is_collect_post(self):
-                css['star'] = 'yellow star'
-            data['css'] = css
+            data['is_liked'] = user.is_like_post(self)
+            data['is_collected'] = user.is_collect_post(self)
         return data
 
     @staticmethod
@@ -581,26 +589,34 @@ class Tweet(db.Model):
         target.abstract = truncate(value, length=64)
         # todo target.body_html
 
+    @property
+    def like_count(self):
+        return query_count(self.liked_users)
+
+    @property
+    def collect_count(self):
+        return query_count(self.collected_users)
+
+    @property
+    def comment_count(self):
+        return query_count(self.comments)
+
     def dumps(self):
         data = {
             'id': self.id,
             'body': self.body,
             'body_html': self.body_html,
             'create_time': timesince(self.create_time),
-            'like_count': query_count(self.liked_users),
-            'collect_count': query_count(self.collected_users),
-            'comment_count': query_count(self.comments),
+            'like_count': self.like_count,
+            'collect_count': self.collect_count,
+            'comment_count': self.comment_count,
             'url': url_for('api.tweets', tweet_id=self.id, _external=True),
             'author': self.author.dumps()
         }
         user = get_current_user()
         if user is not None:
-            css = {'like': 'like', 'star': 'star'}
-            if user.is_like_tweet(self):
-                css['like'] = 'red like'
-            if user.is_collect_tweet(self):
-                css['star'] = 'yellow star'
-            data['css'] = css
+            data['is_liked'] = user.is_like_tweet(self)
+            data['is_collected'] = user.is_collect_tweet(self)
         return data
 
     @staticmethod
@@ -643,14 +659,22 @@ class Comment(db.Model):
         pass
         # todo target.body_html
 
+    @property
+    def like_count(self):
+        return query_count(self.liked_users)
+
+    @property
+    def reply_count(self):
+        return query_count(self.children)
+
     def dumps(self):
         data = {
             'id': self.id,
             'body': self.body,
             'body_html': self.body_html,
             'create_time': timesince(self.create_time),
-            'like_count': query_count(self.liked_users),
-            'reply_count': query_count(self.children),
+            'like_count': self.like_count,
+            'reply_count': self.reply_count,
             'url': url_for('api.comments',
                            comment_id=self.id,
                            _external=True),
@@ -663,10 +687,7 @@ class Comment(db.Model):
             }
         user = get_current_user()
         if user is not None:
-            css = {'like': 'like'}
-            if user.is_like_comment(self):
-                css['like'] = 'red like'
-            data['css'] = css
+            data['is_liked'] = user.is_like_comment(self)
         return data
 
     @staticmethod
@@ -785,7 +806,24 @@ class Message(db.Model):
 
     id = db.Column(db.Integer, primary_key=True)
     body = db.Column(db.Text)
-    user_id = db.Column(db.Integer, db.ForeignKey('users.id'))
-    is_read = db.Column(db.Boolean, default=False)
+    sender_id = db.Column(db.Integer, db.ForeignKey('users.id'),
+                          primary_key=True)
+    sender = db.relationship('User', foreign_keys=[sender_id])
+    receiver_id = db.Column(db.Integer, db.ForeignKey('users.id'),
+                            primary_key=True)
+    receiver = db.relationship('User', foreign_keys=[receiver_id])
+    create_time = db.Column(db.DateTime(), default=datetime.utcnow)
+    # post delete
+    # 过期自动删除，允许用户删除自己的消息和别人发给自己的消息
+
+
+class Notification(db.Model):
+    __tablename__ = 'notifications'
+
+    id = db.Column(db.Integer, primary_key=True)
+    body = db.Column(db.Text)
     sender = db.Column(db.String(64), default='system')
+    receiver_id = db.Column(db.Integer, db.ForeignKey('users.id'),
+                            primary_key=True)
+    receiver = db.relationship('User')
     create_time = db.Column(db.DateTime(), default=datetime.utcnow)

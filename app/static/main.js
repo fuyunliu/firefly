@@ -146,6 +146,8 @@ function getFeedPosts() {
             localStorage.setItem('posts:next', res.data['next'])
             let sc = document.getElementsByClassName('showComment')
             Array.from(sc, e => e.addEventListener('click', initComments))
+            let ac = document.querySelectorAll('span[method]')
+            Array.from(ac, e => e.addEventListener('click', userActions))
         }
     )
 }
@@ -164,6 +166,8 @@ function getFeedTweets() {
             localStorage.setItem('tweets:next', res.data['next'])
             let sc = document.getElementsByClassName('showComment')
             Array.from(sc, e => e.addEventListener('click', initComments))
+            let ac = document.querySelectorAll('span[method]')
+            Array.from(ac, e => e.addEventListener('click', userActions))
         }
     )
 }
@@ -180,6 +184,8 @@ function getFeedComments() {
                 html => lc.insertAdjacentHTML('beforeend', html)
             )
             localStorage.setItem('comments:next', res.data['next'])
+            let ac = document.querySelectorAll('span[method]')
+            Array.from(ac, e => e.addEventListener('click', userActions))
         }
     )
 }
@@ -211,6 +217,8 @@ function initFeedPosts() {
             localStorage.setItem('posts:next', res.data['next'])
             let sc = document.getElementsByClassName('showComment')
             Array.from(sc, e => e.addEventListener('click', initComments))
+            let ac = document.querySelectorAll('span[method]')
+            Array.from(ac, e => e.addEventListener('click', userActions))
         }
     )
 }
@@ -228,21 +236,10 @@ function initFeedTweets() {
             localStorage.setItem('tweets:next', res.data['next'])
             let sc = document.getElementsByClassName('showComment')
             Array.from(sc, e => e.addEventListener('click', initComments))
+            let ac = document.querySelectorAll('span[method]')
+            Array.from(ac, e => e.addEventListener('click', userActions))
         }
     )
-}
-
-
-function initHotPosts() {
-
-}
-
-function getHotPosts() {
-
-}
-
-function ping() {
-    alert('aaa')
 }
 
 function initComments() {
@@ -251,8 +248,8 @@ function initComments() {
     let card = this.closest('.ui.card')
     mt.innerText = card.querySelector('a.header').innerText
     lc.innerHTML = ""
-    item_id = card.getAttribute('item-id')
-    item_md = card.getAttribute('item-md')
+    const item_id = card.getAttribute('item-id')
+    const item_md = card.getAttribute('item-md')
     axios.get(`/${item_md}/${item_id}/comments`).then(
         res => {
             res.data['comments'].map(c => createCommentCard(c)).map(
@@ -264,9 +261,38 @@ function initComments() {
                 onHidden: removeCommentListener
             })
             $('.ui.small.modal').modal('show')
+            let ac = document.querySelectorAll('span[method]')
+            Array.from(ac, e => e.addEventListener('click', userActions))
         }
     )
 }
+
+function userActions() {
+    let card = this.closest('.ui.card') || this.closest('div.comment')
+    const item_id = card.getAttribute('item-id')
+    const item_md = card.getAttribute('item-md')
+    const action = this.getAttribute('data-tooltip')
+    const method = this.getAttribute('method')
+    if (action !== 'likes') {return}
+    config = {
+        method: method,
+        url: `/${item_md}/${item_id}/${action}`
+    }
+    axios.request(config).then(
+        res => {
+            this.setAttribute('method', res.data['method'])
+            this.lastChild.textContent = res.data['count']
+            switch (method) {
+                case 'post':
+                    this.classList.add('redItem')
+                    break
+                case 'delete':
+                    this.classList.remove('redItem')
+            }
+        }
+    )
+}
+
 
 const createPostCard = (post) => `
 <div class="ui fluid card noBorderCard" item-id="${post.id}" item-md="posts">
@@ -281,20 +307,20 @@ const createPostCard = (post) => `
     </div>
   </div>
   <div class="extra content">
-    <span class="left floated iconItem" data-inverted data-tooltip="Likes" data-position="top left" data-variation="mini">
-        <i class="${post.css.like} link icon"></i>${post.like_count}
+    <span class="${post.is_liked ? 'redItem ' : ''}left floated actionItem" data-inverted data-tooltip="likes" data-position="top left" data-variation="mini" method="${post.is_liked ? 'delete' : 'post'}">
+        <i class="like link icon"></i>${post.like_count}
     </span>
-    <span class="left floated iconItem" data-inverted data-tooltip="Comments" data-position="top left" data-variation="mini">
-        <i class="comment link icon showComment"></i>${post.comment_count}
+    <span class="left floated actionItem showComment" data-inverted data-tooltip="comments" data-position="top left" data-variation="mini">
+        <i class="comment link icon"></i>${post.comment_count}
     </span>
-    <span class="left floated iconItem" data-inverted data-tooltip="Favorites" data-position="top left" data-variation="mini">
-        <i class="${post.css.star} link icon"></i>${post.collect_count}
+    <span class="${post.is_collected ? 'yellowItem ' : ''}left floated actionItem" data-inverted data-tooltip="collects" data-position="top left" data-variation="mini" method="${post.is_collected ? 'delete' : 'post'}">
+        <i class="star link icon"></i>${post.collect_count}
     </span>
     <span class="left floated" data-inverted data-tooltip="Share" data-position="top left" data-variation="mini">
         <i class="paper plane link icon"></i>
     </span>
-    <span class="right floated" data-inverted data-tooltip="Favorites" data-position="top left" data-variation="mini">
-        <i class="${post.css.star} icon"></i>${post.collect_count}
+    <span class="right floated" data-inverted data-tooltip="collects" data-position="top left" data-variation="mini">
+        <i class="star icon"></i>${post.collect_count}
     </span>
   </div>
 </div>
@@ -313,20 +339,20 @@ const createTweetCard = (tweet) => `
     </div>
   </div>
   <div class="extra content">
-    <span class="left floated iconItem" data-inverted data-tooltip="Likes" data-position="top left" data-variation="mini">
-        <i class="${tweet.css.like} link icon"></i>${tweet.like_count}
+    <span class="${tweet.is_liked ? 'redItem ' : ''}left floated actionItem" data-inverted data-tooltip="likes" data-position="top left" data-variation="mini" method="${tweet.is_liked ? 'delete' : 'post'}">
+        <i class="like link icon"></i>${tweet.like_count}
     </span>
-    <span class="left floated iconItem" data-inverted data-tooltip="Comments" data-position="top left" data-variation="mini">
-        <i class="comment link icon showComment"></i>${tweet.comment_count}
+    <span class="left floated actionItem showComment" data-inverted data-tooltip="comments" data-position="top left" data-variation="mini">
+        <i class="comment link icon"></i>${tweet.comment_count}
     </span>
-    <span class="left floated iconItem" data-inverted data-tooltip="Favorites" data-position="top left" data-variation="mini">
-        <i class="${tweet.css.star} link icon"></i>${tweet.collect_count}
+    <span class="${tweet.is_collected ? 'yellowItem ' : ''}left floated actionItem" data-inverted data-tooltip="collects" data-position="top left" data-variation="mini" method="${tweet.is_collected ? 'delete' : 'post'}">
+        <i class="star link icon"></i>${tweet.collect_count}
     </span>
     <span class="left floated" data-inverted data-tooltip="Share" data-position="top left" data-variation="mini">
         <i class="paper plane link icon"></i>
     </span>
-    <span class="right floated" data-inverted data-tooltip="Favorites" data-position="top left" data-variation="mini">
-        <i class="${tweet.css.star} icon"></i>${tweet.collect_count}
+    <span class="right floated" data-inverted data-tooltip="collects" data-position="top left" data-variation="mini">
+        <i class="star icon"></i>${tweet.collect_count}
     </span>
   </div>
 </div>
@@ -334,7 +360,7 @@ const createTweetCard = (tweet) => `
 `
 
 const createCommentCard = (comment) => `
-<div class="comment">
+<div class="comment" item-id="${comment.id}" item-md="comments">
     <a class="avatar">
       <img src="${comment.author.avatar}">
     </a>
@@ -345,15 +371,16 @@ const createCommentCard = (comment) => `
       ${comment.parent ? `<i class="at icon"></i><a class="author" href="${comment.parent.author.bio}" target="_blank">${comment.parent.author.username}</a>` : ''}
       <div class="metadata">
         <span class="date">${comment.create_time}</span>
-        <span data-inverted data-tooltip="Likes" data-position="right center" data-variation="mini">
-            <i class="${comment.css.like} link icon"></i>${comment.like_count}
+        <span class="${comment.is_liked? 'redItem ' : ''}actionItem" data-inverted data-tooltip="likes" data-position="right center" data-variation="mini" method="${comment.is_liked ? 'delete': 'post'}">
+            <i class="like link icon"></i>${comment.like_count}
         </span>
-      </div>
+        </div>
       <div class="text">
         ${comment.body}
       </div>
       <div class="actions">
         <a class="reply">Reply</a>
+        <a class="reply">Delete</a>
       </div>
     </div>
 </div>
