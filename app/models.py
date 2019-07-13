@@ -688,6 +688,7 @@ class Comment(db.Model):
         user = get_current_user()
         if user is not None:
             data['is_liked'] = user.is_like_comment(self)
+            data['is_author'] = self.author_id == user.id
         return data
 
     @staticmethod
