@@ -1,4 +1,3 @@
-# -*- coding: utf-8 -*-
 from random import randint
 from sqlalchemy.exc import IntegrityError
 from faker import Faker
@@ -36,8 +35,8 @@ def posts(count=100):
         post = Post(
             title=fake.sentence(),
             body=fake.text(),
-            create_time=fake.past_date(),
-            update_time=fake.past_date(),
+            created=fake.past_date(),
+            updated=fake.past_date(),
             author=user
         )
         db.session.add(post)
@@ -75,7 +74,7 @@ def tweets(count=100):
         user = User.query.offset(randint(0, user_count - 1)).first()
         tweet = Tweet(
             body=fake.text(),
-            create_time=fake.past_date(),
+            created=fake.past_date(),
             author=user
         )
         db.session.add(tweet)

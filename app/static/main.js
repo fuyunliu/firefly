@@ -3,11 +3,27 @@
 axios.defaults.baseURL = 'http://127.0.0.1:5000/api'
 axios.defaults.headers.common['Content-Type'] = 'application/json'
 
+// 通用请求实例
+const commonRequest = axios.create()
+
+// 刷新 token 请求实例
+const tokenRequest = axios.create()
+
 // 请求拦截器
-axios.interceptors.request.use(
+commonRequest.interceptors.request.use(
     config => {
-        const token = 'Bearer ' + localStorage.getItem('token')
-        config.headers.Authorization = token
+        const access = 'Bearer ' + localStorage.getItem('access')
+        config.headers.Authorization = access
+        return config
+    }, error => {
+        return Promise.reject(error)
+    }
+)
+
+tokenRequest.interceptors.request.use(
+    config => {
+        const refresh = 'Bearer ' + localStorage.getItem('refresh')
+        config.headers.Authorization = refresh
         return config
     }, error => {
         return Promise.reject(error)
@@ -15,14 +31,12 @@ axios.interceptors.request.use(
 )
 
 // 响应拦截器
-axios.interceptors.response.use(
+commonRequest.interceptors.response.use(
     response => {
-        localStorage.setItem('token', response.data['token'])
         return response
     }, error => {
         switch (error.response.status) {
             case 401:
-                // axios.interceptors.response.eject(resInterceptor)
 
                 const refreshCall = getNewToken(error)
 
@@ -36,7 +50,6 @@ axios.interceptors.response.use(
                     return Promise.reject(error)
                 }).finally(() => {
                     axios.interceptors.request.eject(id)
-                    // axios.interceptors.response.use(resInterceptor)
                 })
 
         }
@@ -44,9 +57,10 @@ axios.interceptors.response.use(
     }
 )
 
-const getNewToken = error => axios.post('/tokens').then(res => {
-    localStorage.setItem('token', res.data['token'])
-    error.config.headers.Authorization = 'Bearer ' + res.data['token']
+const getNewToken = error => tokenRequest.post('/tokens').then(res => {
+    localStorage.setItem('access', res.data['access'])
+    localStorage.setItem('refresh', res.data['refresh'])
+    error.config.headers.Authorization = 'Bearer ' + res.data['access']
     return Promise.resolve()
 })
 
@@ -108,6 +122,10 @@ function validateForm() {
     })
 }
 
+function flash(msg, cls) {
+    $('body').toast({class: cls, message: msg})
+}
+
 function initBaseComponents() {
     closeMessage()
     dimmerCard()
@@ -120,7 +138,6 @@ const getScrollFactor = (eid) => {
     return document.getElementById(eid).childElementCount / 20
 }
 
-
 function editProfile() {
     let inputs = this.closest('.ui.form').getElementsByTagName('input')
     let user_id = localStorage.getItem('user:id')
@@ -128,8 +145,8 @@ function editProfile() {
     for (let i of inputs) {
         data[i.name] = i.value.trim()
     }
-    axios.put(`/users/${user_id}`, data)
-    .then(res => console.log(res))
+    commonRequest.put(`/users/${user_id}`, data)
+    .then(res => flash('Your profile has been updated.', 'success'))
 }
 
 function getFeedPosts() {
@@ -138,7 +155,7 @@ function getFeedPosts() {
     const next = localStorage.getItem('posts:next')
     if (next == 'null') {return}
     let lc = document.getElementById('ListContent')
-    axios.get(next).then(
+    commonRequest.get(next).then(
         res => {
             res.data['posts'].map(p => createPostCard(p)).map(
                 html => lc.insertAdjacentHTML('beforeend', html)
@@ -158,7 +175,7 @@ function getFeedTweets() {
     const next = localStorage.getItem('tweets:next')
     if (next == 'null') {return}
     let lc = document.getElementById('ListContent')
-    axios.get(next).then(
+    commonRequest.get(next).then(
         res => {
             res.data['tweets'].map(t => createTweetCard(t)).map(
                 html => lc.insertAdjacentHTML('beforeend', html)
@@ -178,7 +195,7 @@ function getFeedComments() {
     const next = localStorage.getItem('comments:next')
     if (next == 'null') {return}
     let lc = document.getElementById('ListComment')
-    axios.get(next).then(
+    commonRequest.get(next).then(
         res => {
             res.data['comments'].map(c => createCommentCard(c)).map(
                 html => lc.insertAdjacentHTML('beforeend', html)
@@ -209,7 +226,7 @@ function initFeedPosts() {
     window.addEventListener('scroll', scrollPost)
     let lc = document.getElementById('ListContent')
     lc.innerHTML = ""
-    axios.get('/posts').then(
+    commonRequest.get('/posts').then(
         res => {
             res.data['posts'].map(p => createPostCard(p)).map(
                 html => lc.insertAdjacentHTML('beforeend', html)
@@ -228,7 +245,7 @@ function initFeedTweets() {
     window.addEventListener('scroll', scrollTweet)
     let lc = document.getElementById('ListContent')
     lc.innerHTML = ""
-    axios.get('/tweets').then(
+    commonRequest.get('/tweets').then(
         res => {
             res.data['tweets'].map(t => createTweetCard(t)).map(
                 html => lc.insertAdjacentHTML('beforeend', html)
@@ -250,7 +267,7 @@ function initComments() {
     lc.innerHTML = ""
     const item_id = card.getAttribute('item-id')
     const item_md = card.getAttribute('item-md')
-    axios.get(`/${item_md}/${item_id}/comments`).then(
+    commonRequest.get(`/${item_md}/${item_id}/comments`).then(
         res => {
             res.data['comments'].map(c => createCommentCard(c)).map(
                 html => lc.insertAdjacentHTML('beforeend', html)
@@ -278,7 +295,7 @@ function userActions() {
         method: method,
         url: `/${item_md}/${item_id}/${action}`
     }
-    axios.request(config).then(
+    commonRequest.request(config).then(
         res => {
             this.setAttribute('method', res.data['method'])
             this.lastChild.textContent = res.data['count']
@@ -293,11 +310,10 @@ function userActions() {
     )
 }
 
-
 const createPostCard = (post) => `
 <div class="ui fluid card noBorderCard" item-id="${post.id}" item-md="posts">
   <div class="content">
-    <div class="right floated meta">${post.create_time}</div>
+    <div class="right floated meta">${post.created}</div>
     <a class="header" href="${post.url}" target="_blank">${post.title}</a>
     <a class="meta" href="${post.author.bio}" target="_blank">
         ${post.author.username}
@@ -330,7 +346,7 @@ const createPostCard = (post) => `
 const createTweetCard = (tweet) => `
 <div class="ui fluid card noBorderCard" item-id="${tweet.id}" item-md="tweets">
   <div class="content">
-    <div class="right floated meta">${tweet.create_time}</div>
+    <div class="right floated meta">${tweet.created}</div>
     <a class="header" href="${tweet.author.bio}" target="_blank">
         ${tweet.author.username}
     </a>
@@ -370,7 +386,7 @@ const createCommentCard = (comment) => `
       </a>
       ${comment.parent ? `<i class="at icon"></i><a class="author" href="${comment.parent.author.bio}" target="_blank">${comment.parent.author.username}</a>` : ''}
       <div class="metadata">
-        <span class="date">${comment.create_time}</span>
+        <span class="date">${comment.created}</span>
         <span class="${comment.is_liked? 'redItem ' : ''}actionItem" data-inverted data-tooltip="likes" data-position="right center" data-variation="mini" method="${comment.is_liked ? 'delete': 'post'}">
             <i class="like link icon"></i>${comment.like_count}
         </span>

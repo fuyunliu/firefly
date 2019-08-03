@@ -1,8 +1,7 @@
-# -*- coding: utf-8 -*-
-
 from flask import render_template
 from flask_login import login_required
 from . import main
+from ..models import Post
 
 
 @main.route('/')
@@ -15,3 +14,10 @@ def index():
 @login_required
 def write():
     return render_template('write.html')
+
+
+@main.route('/post/<int:post_id>/edit')
+@login_required
+def edit(post_id):
+    post = Post.query.get_or_404(post_id)
+    return render_template('edit.html', post=post)

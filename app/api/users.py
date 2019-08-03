@@ -1,5 +1,3 @@
-# -*- coding: utf-8 -*-
-
 from flask import g, request, jsonify, current_app, url_for
 from flask.views import MethodView
 from .. import db

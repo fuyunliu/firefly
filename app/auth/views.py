@@ -1,5 +1,3 @@
-# -*- coding: utf-8 -*-
-
 from flask import render_template, redirect, request, url_for, flash, \
     jsonify, session
 from flask_login import login_user, logout_user, login_required, current_user
@@ -19,11 +17,6 @@ def before_request():
                 and request.blueprint != 'auth' \
                 and request.endpoint != 'static':
             return redirect(url_for('auth.unconfirmed'))
-    if current_user.is_authenticated and current_user.confirmed:
-        if request.endpoint \
-                and request.blueprint != 'api' \
-                and request.endpoint != 'static':
-            session['token'] = current_user.generate_auth_token()
 
 
 @auth.route('/ping')
@@ -46,6 +39,8 @@ def login():
     form = LoginForm()
     if form.validate_on_submit():
         login_user(form.user, form.remember_me.data)
+        session['access'] = current_user.generate_auth_token()
+        session['refresh'] = current_user.generate_auth_token(expiration=3600 * 24 * 31, token_type='refresh')
         next = request.args.get('next')
         if next is None or not next.startswith('/'):
             next = url_for('main.index')
@@ -58,6 +53,10 @@ def logout():
     current_user.ping()
     db.session.commit()
     logout_user()
+    if 'access' in session:
+        session.pop('access')
+    if 'refresh' in session:
+        session.pop('refresh')
     flash('You have been logged out.', 'info')
     return redirect(url_for('auth.login'))
 

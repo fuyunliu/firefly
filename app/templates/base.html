@@ -74,9 +74,12 @@
 
     {% if current_user.is_authenticated %}
     <script>
-        localStorage.setItem('token', '{{session["token"]}}')
         localStorage.setItem('user:id', '{{current_user.id}}')
         localStorage.setItem('user:email', '{{current_user.email}}')
+        if (!('access' in localStorage) && !('refresh' in localStorage)) {
+            localStorage.setItem('access', '{{session["access"]}}')
+            localStorage.setItem('refresh', '{{session["refresh"]}}')
+        }
     </script>
     {% endif %}
     <script>

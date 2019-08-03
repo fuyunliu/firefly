@@ -1,5 +1,3 @@
-# -*- coding: utf-8 -*-
-
 from flask import current_app, render_template
 from flask_mail import Message
 from . import mail, celery_app, db

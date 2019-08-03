@@ -47,3 +47,10 @@
 </div>
 </div>
 {% endblock %}
+
+{% block script %}
+{{super()}}
+<script>
+    localStorage.clear()
+</script>
+{% endblock %}

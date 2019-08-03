@@ -1,5 +1,3 @@
-# -*- coding: utf-8 -*-
-
 from flask import jsonify, g
 from flask.views import MethodView
 from ..models import Comment

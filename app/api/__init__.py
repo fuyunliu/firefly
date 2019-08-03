@@ -1,7 +1,4 @@
-# -*- coding: utf-8 -*-
-
-import json
-from flask import Blueprint, g, jsonify
+from flask import Blueprint, g, jsonify, request
 from flask_httpauth import HTTPTokenAuth
 from .users import UserAPI, UserPostAPI, UserTweetAPI, UserCommentAPI, \
     UserFavoriteAPI, UserLikeAPI, UserCollectAPI
@@ -17,8 +14,15 @@ auth = HTTPTokenAuth()
 
 @auth.verify_token
 def verify_token(token):
-    g.current_user = User.verify_auth_token(token)
-    return g.current_user is not None
+    data = User.verify_auth_token(token)
+    if data is not None:
+        if data['type'] == 'refresh' and request.endpoint != 'api.create_token':
+            return False
+        if data['type'] == 'access' and request.endpoint == 'api.create_token':
+            return False
+        g.current_user = User.query.get(data['id'])
+        return g.current_user is not None
+    return False
 
 
 @auth.error_handler
@@ -33,18 +37,11 @@ def before_request():
         return forbidden('Unconfirmed account')
 
 
-@api.after_request
-@auth.login_required
-def after_request(response):
-    data = json.loads(response.get_data())
-    data['token'] = g.current_user.generate_auth_token()
-    response.set_data(json.dumps(data))
-    return response
-
-
 @api.route('/tokens', methods=['POST'])
 def create_token():
-    return jsonify({})
+    access = g.current_user.generate_auth_token()
+    refresh = g.current_user.generate_auth_token(expiration=3600 * 24 * 31, token_type='refresh')
+    return jsonify({'access': access, 'refresh': refresh})
 
 
 user_view = UserAPI.as_view('users')

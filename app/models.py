@@ -1,13 +1,10 @@
-# -*- coding: utf-8 -*-
-
 import hashlib
 import urllib.parse as urlparse
 from datetime import datetime
 from functools import partial
-from itsdangerous import TimedJSONWebSignatureSerializer as Serializer, \
-    SignatureExpired
+from itsdangerous import TimedJSONWebSignatureSerializer as Serializer
 from werkzeug.security import generate_password_hash, check_password_hash
-from flask import current_app, url_for, g, request
+from flask import current_app, url_for, g
 from flask_login import UserMixin, AnonymousUserMixin, current_user
 from . import db, login_manager, timesince
 
@@ -83,7 +80,7 @@ class Follow(db.Model):
     me = db.relationship('User', foreign_keys=[me_id])
     you_id = db.Column(db.Integer, db.ForeignKey('users.id'), primary_key=True)
     you = db.relationship('User', foreign_keys=[you_id])
-    create_time = db.Column(db.DateTime(), default=datetime.utcnow)
+    created = db.Column(db.DateTime(), default=datetime.utcnow)
 
 
 class User(UserMixin, db.Model):
@@ -266,7 +263,7 @@ class User(UserMixin, db.Model):
         hash = self.avatar_hash or self.gravatar_hash()
         query = {
             's': size,
-            'd': current_app.config['DEFAULT_USER_AVATAR'],
+            'd': 'mp',
             'r': 'g'
         }
         return f'{url}/{hash}?{urlparse.urlencode(query)}'
@@ -389,26 +386,17 @@ class User(UserMixin, db.Model):
                                              comment_id=comment.id).first()
         return lc is not None
 
-    def generate_auth_token(self, expiration=3600):
+    def generate_auth_token(self, expiration=3600, token_type='access'):
         s = Serializer(current_app.config['SECRET_KEY'], expiration)
-        return s.dumps({'id': self.id}).decode('utf-8')
+        return s.dumps({'id': self.id, 'type': token_type}).decode('utf-8')
 
     @staticmethod
     def verify_auth_token(token):
         s = Serializer(current_app.config['SECRET_KEY'])
         try:
-            data = s.loads(token.encode('utf-8'))
-            user = User.query.get(data['id'])
-            return user
-        except SignatureExpired as e:
-            if request.endpoint != 'api.create_token':
-                return None
-            t = e.date_signed + current_app.config['PERMANENT_SESSION_LIFETIME']
-            if int(t.timestamp()) < s.now():
-                return None
-            user = User.query.get(e.payload['id'])
-            return user
-        except:
+            return s.loads(token.encode('utf-8'))
+        except Exception as e:
+            print(e)
             return None
 
     def dumps(self):
@@ -442,6 +430,9 @@ class User(UserMixin, db.Model):
 
 class AnonymousUser(AnonymousUserMixin):
 
+    def ping(self):
+        pass
+
     def can(self, perm):
         return False
 
@@ -464,15 +455,6 @@ def get_current_user():
     return user
 
 
-def query_count(q):
-    return q.with_entities(db.func.count()).scalar()
-
-
-def null_or_empty(s):
-    if s is None or s.strip() == '':
-        return True
-
-
 class Post(db.Model):
     __tablename__ = 'posts'
 
@@ -481,11 +463,10 @@ class Post(db.Model):
     body = db.Column(db.Text)
     body_html = db.Column(db.Text)
     abstract = db.Column(db.Text)
+    draft = db.Column(db.Boolean, default=True)
     author_id = db.Column(db.Integer, db.ForeignKey('users.id'))
-    create_time = db.Column(db.DateTime(), index=True, default=datetime.utcnow)
-    update_time = db.Column(db.DateTime(),
-                            default=datetime.utcnow,
-                            onupdate=datetime.utcnow)
+    created = db.Column(db.DateTime(), index=True, default=datetime.utcnow)
+    updated = db.Column(db.DateTime(), default=datetime.utcnow, onupdate=datetime.utcnow)
 
     # 文章的评论
     comments = db.relationship('Comment',
@@ -508,20 +489,19 @@ class Post(db.Model):
         truncate = partial(
             current_app.jinja_env.filters['truncate'],
             current_app.jinja_env)
-        target.abstract = truncate(value, length=64)
-        # todo target.body_html
+        target.abstract = truncate(value, length=200)
 
     @property
     def like_count(self):
-        return query_count(self.liked_users)
+        return self.liked_users.count_all()
 
     @property
     def collect_count(self):
-        return query_count(self.collected_users)
+        return self.collected_users.count_all()
 
     @property
     def comment_count(self):
-        return query_count(self.comments)
+        return self.comments.count_all()
 
     def dumps(self):
         data = {
@@ -529,8 +509,8 @@ class Post(db.Model):
             'title': self.title,
             'body': self.body,
             'body_html': self.body_html,
-            'create_time': timesince(self.create_time),
-            'update_time': timesince(self.update_time),
+            'created': timesince(self.created),
+            'updated': timesince(self.updated),
             'like_count': self.like_count,
             'collect_count': self.collect_count,
             'comment_count': self.comment_count,
@@ -547,9 +527,11 @@ class Post(db.Model):
     def loads(data):
         title = data.get('title')
         body = data.get('body')
-        if any(map(null_or_empty, (title, body))):
+        body_html = data.get('body_html')
+        if (title is None or title.strip() == '') and \
+                (body is None or body.strip() == ''):
             raise ValueError('post does not have a title or body')
-        return Post(title=title, body=body)
+        return Post(title=title, body=body, body_html=body_html)
 
     def __repr__(self):
         return f'<Post {self.id}>'
@@ -563,7 +545,7 @@ class Tweet(db.Model):
     body_html = db.Column(db.Text)
     abstract = db.Column(db.Text)
     author_id = db.Column(db.Integer, db.ForeignKey('users.id'))
-    create_time = db.Column(db.DateTime(), index=True, default=datetime.utcnow)
+    created = db.Column(db.DateTime(), index=True, default=datetime.utcnow)
 
     # 推特的评论
     comments = db.relationship('Comment',
@@ -586,27 +568,27 @@ class Tweet(db.Model):
         truncate = partial(
             current_app.jinja_env.filters['truncate'],
             current_app.jinja_env)
-        target.abstract = truncate(value, length=64)
+        target.abstract = truncate(value, length=200)
         # todo target.body_html
 
     @property
     def like_count(self):
-        return query_count(self.liked_users)
+        return self.liked_users.count_all()
 
     @property
     def collect_count(self):
-        return query_count(self.collected_users)
+        return self.collected_users.count_all()
 
     @property
     def comment_count(self):
-        return query_count(self.comments)
+        return self.comments.count_all()
 
     def dumps(self):
         data = {
             'id': self.id,
             'body': self.body,
             'body_html': self.body_html,
-            'create_time': timesince(self.create_time),
+            'created': timesince(self.created),
             'like_count': self.like_count,
             'collect_count': self.collect_count,
             'comment_count': self.comment_count,
@@ -622,7 +604,7 @@ class Tweet(db.Model):
     @staticmethod
     def loads(data):
         body = data.get('body')
-        if null_or_empty(body):
+        if body is None or body.strip() == '':
             raise ValueError('tweet does not have a body')
         return Tweet(body=body)
 
@@ -640,7 +622,7 @@ class Comment(db.Model):
     tweet_id = db.Column(db.Integer, db.ForeignKey('tweets.id'))
     author_id = db.Column(db.Integer, db.ForeignKey('users.id'))
     parent_id = db.Column(db.Integer, db.ForeignKey('comments.id'))
-    create_time = db.Column(db.DateTime(), index=True, default=datetime.utcnow)
+    created = db.Column(db.DateTime(), index=True, default=datetime.utcnow)
     parent = db.relationship('Comment',
                              remote_side=[id],
                              backref=db.backref(
@@ -661,18 +643,18 @@ class Comment(db.Model):
 
     @property
     def like_count(self):
-        return query_count(self.liked_users)
+        return self.liked_users.count_all()
 
     @property
     def reply_count(self):
-        return query_count(self.children)
+        return self.children.count_all()
 
     def dumps(self):
         data = {
             'id': self.id,
             'body': self.body,
             'body_html': self.body_html,
-            'create_time': timesince(self.create_time),
+            'created': timesince(self.created),
             'like_count': self.like_count,
             'reply_count': self.reply_count,
             'url': url_for('api.comments',
@@ -694,7 +676,7 @@ class Comment(db.Model):
     @staticmethod
     def loads(data):
         body = data.get('body')
-        if null_or_empty(body):
+        if body is None or body.strip() == '':
             raise ValueError('comment does not have a body')
         comment = Comment(body=body)
         post_id = data.get('post_id')
@@ -737,7 +719,7 @@ class UserLikePost(db.Model):
     post_id = db.Column(db.Integer, db.ForeignKey('posts.id'),
                         primary_key=True)
     post = db.relationship('Post')
-    create_time = db.Column(db.DateTime(), default=datetime.utcnow)
+    created = db.Column(db.DateTime(), default=datetime.utcnow)
 
 
 class UserCollectPost(db.Model):
@@ -752,7 +734,7 @@ class UserCollectPost(db.Model):
     favorite_id = db.Column(db.Integer, db.ForeignKey('favorites.id'),
                             primary_key=True)
     favorite = db.relationship('Favorite')
-    create_time = db.Column(db.DateTime(), default=datetime.utcnow)
+    created = db.Column(db.DateTime(), default=datetime.utcnow)
 
 
 class UserLikeComment(db.Model):
@@ -764,7 +746,7 @@ class UserLikeComment(db.Model):
     comment_id = db.Column(db.Integer, db.ForeignKey('comments.id'),
                            primary_key=True)
     comment = db.relationship('Comment')
-    create_time = db.Column(db.DateTime(), default=datetime.utcnow)
+    created = db.Column(db.DateTime(), default=datetime.utcnow)
 
 
 class UserLikeTweet(db.Model):
@@ -776,7 +758,7 @@ class UserLikeTweet(db.Model):
     tweet_id = db.Column(db.Integer, db.ForeignKey('tweets.id'),
                          primary_key=True)
     tweet = db.relationship('Tweet')
-    create_time = db.Column(db.DateTime(), default=datetime.utcnow)
+    created = db.Column(db.DateTime(), default=datetime.utcnow)
 
 
 class UserCollectTweet(db.Model):
@@ -791,7 +773,7 @@ class UserCollectTweet(db.Model):
     favorite_id = db.Column(db.Integer, db.ForeignKey('favorites.id'),
                             primary_key=True)
     favorite = db.relationship('Favorite')
-    create_time = db.Column(db.DateTime(), default=datetime.utcnow)
+    created = db.Column(db.DateTime(), default=datetime.utcnow)
 
 
 class Topic(db.Model):
@@ -813,7 +795,7 @@ class Message(db.Model):
     receiver_id = db.Column(db.Integer, db.ForeignKey('users.id'),
                             primary_key=True)
     receiver = db.relationship('User', foreign_keys=[receiver_id])
-    create_time = db.Column(db.DateTime(), default=datetime.utcnow)
+    created = db.Column(db.DateTime(), default=datetime.utcnow)
     # post delete
     # 过期自动删除，允许用户删除自己的消息和别人发给自己的消息
 
@@ -827,4 +809,8 @@ class Notification(db.Model):
     receiver_id = db.Column(db.Integer, db.ForeignKey('users.id'),
                             primary_key=True)
     receiver = db.relationship('User')
-    create_time = db.Column(db.DateTime(), default=datetime.utcnow)
+    created = db.Column(db.DateTime(), default=datetime.utcnow)
+
+
+db.event.listen(Post.body, 'set', Post.on_changed_body)
+db.event.listen(Tweet.body, 'set', Tweet.on_changed_body)

@@ -1,5 +1,3 @@
-# -*- coding: utf-8 -*-
-
 import os
 
 base_dir = os.path.abspath(os.path.dirname(__file__))
@@ -8,7 +6,7 @@ base_dir = os.path.abspath(os.path.dirname(__file__))
 class Config:
 
     # session and cookie
-    SERVER_NAME = '127.0.0.1:5000'
+    # SERVER_NAME = '127.0.0.1:5000'
     SECRET_KEY = os.environ.get('SECRET_KEY') or 'hard to guess string'
     SESSION_KEY_PREFIX = 'session:'
 
@@ -33,8 +31,6 @@ class Config:
 
     # common settings
     PER_PAGE_SIZE = 10
-    DEFAULT_USER_AVATAR = ("https://wx4.sinaimg.cn/orj360/"
-                           "0066oo9Jly1g4uykx25gqj301e01e3ye.jpg")
 
     @staticmethod
     def init_app(app):
@@ -44,12 +40,14 @@ class Config:
 class DevConfig(Config):
     DEBUG = True
     SQLALCHEMY_DATABASE_URI = 'postgresql://fuyun:fuyun@localhost:5432/firefly'
+    SQLALCHEMY_ECHO = True
 
 
 class TestConfig(Config):
     TESTING = True
     SQLALCHEMY_DATABASE_URI = 'sqlite:///' + os.path.join(base_dir, 'test.db')
     WTF_CSRF_ENABLED = False
+    SQLALCHEMY_ECHO = True
 
 
 class ProdConfig(Config):

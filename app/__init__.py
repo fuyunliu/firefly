@@ -1,17 +1,24 @@
-# -*- coding: utf-8 -*-
 import pendulum
 from flask import Flask
 from flask_mail import Mail
-from flask_sqlalchemy import SQLAlchemy
+from flask_sqlalchemy import SQLAlchemy, BaseQuery
 from flask_login import LoginManager
 from flask_migrate import Migrate
-from flask_session import RedisSessionInterface
+# from flask_session import RedisSessionInterface
+from sqlalchemy import func
 from celery import Celery
-from redis import StrictRedis
+# from redis import StrictRedis
 from config import config, Config
 
-db = SQLAlchemy()
-sr = StrictRedis()
+
+class CustomQuery(BaseQuery):
+
+    def count_all(self):
+        return self.with_entities(func.count()).scalar()
+
+
+db = SQLAlchemy(query_class=CustomQuery)
+# sr = StrictRedis()
 mail = Mail()
 migrate = Migrate()
 
@@ -24,6 +31,7 @@ login_manager.login_view = 'auth.login'
 
 
 def timesince(dt):
+    dt = dt or pendulum.now()
     return pendulum.instance(dt).diff_for_humans()
 
 
@@ -34,10 +42,10 @@ def create_app(config_name):
     app.jinja_env.filters['timesince'] = timesince
     app.config.from_object(config[config_name])
     config[config_name].init_app(app)
-    app.session_interface = RedisSessionInterface(
-        sr,
-        app.config['SESSION_KEY_PREFIX']
-    )
+    # app.session_interface = RedisSessionInterface(
+    #     sr,
+    #     app.config['SESSION_KEY_PREFIX']
+    # )
 
     db.init_app(app)
     mail.init_app(app)
