@@ -258,8 +258,7 @@ class User(UserMixin, db.Model):
         return hashlib.md5(self.email.lower().encode('utf-8')).hexdigest()
 
     def gravatar(self, size=80):
-        return url_for('static', filename='images/user.jpg', _external=True)
-        url = "https://secure.gravatar.com/avatar"
+        url = "https://gravatar.loli.net/avatar"
         hash = self.avatar_hash or self.gravatar_hash()
         query = {
             's': size,
