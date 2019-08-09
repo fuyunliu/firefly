@@ -1,4 +1,5 @@
 import os
+from app.helpers import get_random_secret
 
 base_dir = os.path.abspath(os.path.dirname(__file__))
 
@@ -7,7 +8,7 @@ class Config:
 
     # session and cookie
     # SERVER_NAME = '127.0.0.1:5000'
-    SECRET_KEY = 'hard to guess string'
+    SECRET_KEY = get_random_secret()
     SESSION_KEY_PREFIX = 'session:'
 
     # email
