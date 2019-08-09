@@ -42,6 +42,8 @@ def create_app(config_name):
     app.jinja_env.filters['timesince'] = timesince
     app.config.from_object(config[config_name])
     config[config_name].init_app(app)
+    from .helpers import get_random_secret
+    app.config['SECRET_KEY'] = get_random_secret()
     # app.session_interface = RedisSessionInterface(
     #     sr,
     #     app.config['SESSION_KEY_PREFIX']
