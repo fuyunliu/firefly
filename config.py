@@ -7,7 +7,7 @@ class Config:
 
     # session and cookie
     # SERVER_NAME = '127.0.0.1:5000'
-    SECRET_KEY = os.environ.get('SECRET_KEY') or 'hard to guess string'
+    SECRET_KEY = 'hard to guess string'
     SESSION_KEY_PREFIX = 'session:'
 
     # email
